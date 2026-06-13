@@ -1,0 +1,169 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Record Consultation{% endblock %}
+{% block page_subtitle %}Enter medical details for {{ appointment.patient.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 720px;">
+    <div class="form-card animate-scale-in" style="padding: 28px;">
+        <div class="form-header" style="margin-bottom: 20px;">
+            <div class="icon" style="background: var(--primary-50); color: var(--primary-600); width: 52px; height: 52px; font-size: 1.2rem;">
+                <i class="fas fa-file-medical"></i>
+            </div>
+            <h2 style="font-size: 1.3rem;">Record Consultation</h2>
+            <p>Enter vitals, diagnosis, prescription, and lab tests</p>
+        </div>
+
+        <!-- Patient & Appointment Info -->
+        <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 16px; margin-bottom: 20px; border: 1px solid var(--gray-200);">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;">Patient</div>
+                    <div style="font-weight: 700; font-size: 0.95rem;">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;">Patient ID</div>
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--primary-700);">{{ appointment.patient.patient_id|default:"—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;">Doctor</div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;">Date & Time</div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">{{ appointment.appointment_date|date:"M d" }} · {{ appointment.time_slot|time:"h:i A" }}</div>
+                </div>
+            </div>
+            {% if appointment.reason %}
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-200);">
+                <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;">Reason</div>
+                <div style="font-weight: 600; font-size: 0.9rem; margin-top: 2px;">{{ appointment.reason }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Vitals Section -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-weight: 700; color: var(--gray-700); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+                    <i class="fas fa-heart-pulse" style="color: var(--danger);"></i>
+                    Vitals
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.78rem;">Blood Pressure</label>
+                        {{ form.blood_pressure }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.78rem;">Temperature</label>
+                        {{ form.temperature }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.78rem;">Weight</label>
+                        {{ form.weight }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.78rem;">Pulse</label>
+                        {{ form.pulse }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Symptoms -->
+            <div class="form-group">
+                <label>Symptoms</label>
+                {{ form.symptoms }}
+            </div>
+
+            <!-- Diagnosis -->
+            <div class="form-group">
+                <label>Diagnosis <span class="required">*</span></label>
+                {{ form.diagnosis }}
+                {% if form.diagnosis.errors %}<div class="form-error">{{ form.diagnosis.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Prescription -->
+            <div class="form-group">
+                <label>Prescription <span class="required">*</span></label>
+                {{ form.prescription }}
+                {% if form.prescription.errors %}<div class="form-error">{{ form.prescription.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+                <label>Additional Notes</label>
+                {{ form.notes }}
+            </div>
+
+            <!-- Lab Tests Ordered -->
+            <div class="form-group">
+                <label>Lab Tests Ordered</label>
+                {{ form.lab_tests_ordered }}
+                <div class="form-help">Enter test names separated by commas (e.g., CBC, Blood Sugar, X-Ray Chest)</div>
+            </div>
+
+            <!-- Follow-up -->
+            <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 14px 16px; margin-bottom: 20px; border: 1px solid var(--gray-200);">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                        {{ form.follow_up_required }}
+                        <span style="font-weight: 600; font-size: 0.85rem;">Follow-up Required</span>
+                    </label>
+                    <div id="followup-date-field" style="display: none; flex: 1;">
+                        {{ form.follow_up_date }}
+                        {% if form.follow_up_date.errors %}<div class="form-error">{{ form.follow_up_date.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Previous Medical Records -->
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--border-radius); padding: 14px 16px; margin-bottom: 20px;">
+                <div style="font-weight: 700; color: #92400e; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+                    <i class="fas fa-folder-open"></i>
+                    Previous Medical Records (from other doctors/hospitals)
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.78rem;">Upload Document</label>
+                        {{ form.previous_records }}
+                        <div class="form-help">Upload prescription, report, or scan from previous doctor</div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.78rem;">Notes</label>
+                        {{ form.previous_records_notes }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'clinic:patient_detail' appointment.patient.patient_id %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-primary" style="flex: 2; justify-content: center;">
+                    <i class="fas fa-save"></i> Save Consultation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    input[type="text"], input[type="number"], input[type="file"], input[type="date"], select, textarea {
+        width: 100%; padding: 10px 12px; border: 1.5px solid var(--gray-200); border-radius: var(--border-radius); font-size: 0.88rem; font-family: var(--font-sans);
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary-400); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary-600); }
+</style>
+
+<script>
+    var followUpCheckbox = document.querySelector('input[name="follow_up_required"]');
+    var followUpDateField = document.getElementById('followup-date-field');
+    if (followUpCheckbox) {
+        followUpCheckbox.addEventListener('change', function() {
+            followUpDateField.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+</script>
+{% endblock %}

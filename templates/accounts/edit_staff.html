@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Edit Staff{% endblock %}
+{% block page_subtitle %}Update {{ staff.get_full_name|default:staff.username }}'s account{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in-up" style="max-width: 600px; margin: 0 auto;">
+    <div class="form-card">
+        <div class="form-header">
+            <div class="icon" style="background: var(--info-bg); color: var(--info);">
+                <i class="fas fa-user-edit"></i>
+            </div>
+            <h2>Edit {{ staff.get_role_display }}</h2>
+            <p>Update account details for {{ staff.get_full_name|default:staff.username }}</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" name="first_name" value="{{ staff.first_name }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" name="last_name" value="{{ staff.last_name }}" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ staff.email|default:'' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ staff.phone|default:'' }}" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Gender</label>
+                <select name="gender" class="form-control">
+                    <option value="">-- Select --</option>
+                    <option value="MALE" {% if staff.gender == 'MALE' %}selected{% endif %}>Male</option>
+                    <option value="FEMALE" {% if staff.gender == 'FEMALE' %}selected{% endif %}>Female</option>
+                    <option value="OTHER" {% if staff.gender == 'OTHER' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            {% if staff.role == 'DOCTOR' %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Specialization</label>
+                    <input type="text" name="specialization" value="{{ staff.specialization|default:'' }}" class="form-control" placeholder="e.g., Gynecology">
+                </div>
+                <div class="form-group">
+                    <label>Consultation Fee (PKR)</label>
+                    <input type="number" name="consultation_fee" value="{{ staff.consultation_fee }}" class="form-control" step="0.01">
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" value="{{ staff.username }}" class="form-control" disabled style="background: var(--gray-100); color: var(--gray-500);">
+                <div class="form-help">Username cannot be changed</div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <a href="{% url 'manage_staff' %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-primary btn-lg" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Appointment Details{% endblock %}
+{% block page_subtitle %}Appointment #{{ appointment.id }}{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in-up" style="max-width: 800px; margin: 0 auto;">
+    <!-- Status Banner -->
+    <div style="background: {% if appointment.status == 'CONFIRMED' %}var(--success-bg){% elif appointment.status == 'PENDING' %}var(--warning-bg){% elif appointment.status == 'COMPLETED' %}var(--info-bg){% elif appointment.status == 'CANCELLED' %}#fef2f2{% else %}var(--gray-100){% endif %};
+                border: 1px solid {% if appointment.status == 'CONFIRMED' %}var(--success){% elif appointment.status == 'PENDING' %}var(--warning){% elif appointment.status == 'COMPLETED' %}var(--info){% elif appointment.status == 'CANCELLED' %}var(--danger){% else %}var(--gray-300){% endif %};
+                border-radius: var(--border-radius); padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 1.5rem;">
+                {% if appointment.status == 'CONFIRMED' %}<i class="fas fa-check-circle" style="color: var(--success);"></i>
+                {% elif appointment.status == 'PENDING' %}<i class="fas fa-clock" style="color: var(--warning);"></i>
+                {% elif appointment.status == 'COMPLETED' %}<i class="fas fa-check-double" style="color: var(--info);"></i>
+                {% elif appointment.status == 'CANCELLED' %}<i class="fas fa-times-circle" style="color: var(--danger);"></i>
+                {% else %}<i class="fas fa-question-circle" style="color: var(--gray-500);"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div style="font-weight: 700; font-size: 1.1rem;">{{ appointment.get_status_display }}</div>
+                <div style="font-size: 0.8rem; color: var(--gray-500);">Booked on {{ appointment.created_at|date:"M d, Y h:i A" }}</div>
+            </div>
+        </div>
+        {% if token %}
+        <div style="text-align: center;">
+            <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--gray-500);">Queue Token</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-700);">#{{ token.token_number }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid-2">
+        <!-- Appointment Info -->
+        <div class="form-card">
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;">
+                <i class="fas fa-calendar-alt" style="color: var(--primary-600); margin-right: 8px;"></i>Appointment
+            </h3>
+            <div style="space-y: 12px;">
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Doctor</span>
+                    <span style="font-weight: 600;">Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Specialization</span>
+                    <span style="font-weight: 600;">{{ appointment.doctor.specialization|default:"General" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Date</span>
+                    <span style="font-weight: 600;">{{ appointment.appointment_date|date:"l, M d, Y" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Time</span>
+                    <span style="font-weight: 600;">{{ appointment.time_slot|time:"h:i A" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Consultation Fee</span>
+                    <span style="font-weight: 700; color: var(--success);">PKR {{ appointment.doctor.consultation_fee }}</span>
+                </div>
+                {% if appointment.reason %}
+                <div style="padding: 10px 0;">
+                    <span style="color: var(--gray-500); font-size: 0.85rem; display: block; margin-bottom: 4px;">Reason</span>
+                    <span style="font-size: 0.9rem;">{{ appointment.reason }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Payment & Queue Info -->
+        <div>
+            <!-- Payment Status -->
+            <div class="form-card" style="margin-bottom: 16px;">
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;">
+                    <i class="fas fa-credit-card" style="color: var(--primary-600); margin-right: 8px;"></i>Payment
+                </h3>
+                {% if payment %}
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Amount</span>
+                    <span style="font-weight: 600;">PKR {{ payment.amount }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Method</span>
+                    <span style="font-weight: 600;">{{ payment.get_method_display }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Status</span>
+                    <span class="status-badge status-{{ payment.status|lower }}">{{ payment.get_status_display }}</span>
+                </div>
+                {% if payment.transaction_id %}
+                <div style="padding: 10px 0 0;">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Transaction ID</span>
+                    <div style="font-family: monospace; font-size: 0.85rem; font-weight: 600;">{{ payment.transaction_id }}</div>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="empty-state" style="padding: 16px;">
+                    <p style="font-size: 0.85rem;">No payment recorded yet.</p>
+                    {% if appointment.status == 'PENDING' %}
+                    <a href="{% url 'clinic:make_payment' appointment.id %}" class="btn-primary btn-sm" style="margin-top: 8px;">
+                        <i class="fas fa-credit-card"></i> Pay Now
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Queue Info -->
+            {% if token %}
+            <div class="form-card" style="margin-bottom: 16px;">
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;">
+                    <i class="fas fa-users-rectangle" style="color: var(--primary-600); margin-right: 8px;"></i>Queue
+                </h3>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Token Number</span>
+                    <span style="font-weight: 800; font-size: 1.2rem; color: var(--primary-700);">#{{ token.token_number }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100);">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Est. Wait</span>
+                    <span style="font-weight: 600;">{{ token.estimated_wait_minutes }} min</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">Status</span>
+                    <span style="font-weight: 600; color: {% if token.is_active %}var(--success){% else %}var(--gray-500){% endif %};">
+                        {% if token.is_active %}In Queue{% else %}Completed{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Medical Record (if completed) -->
+    {% if medical_record %}
+    <div class="form-card" style="margin-top: 16px;">
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;">
+            <i class="fas fa-file-medical" style="color: var(--primary-600); margin-right: 8px;"></i>Medical Record
+        </h3>
+        {% if medical_record.blood_pressure or medical_record.temperature or medical_record.weight or medical_record.pulse %}
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+            {% if medical_record.blood_pressure %}
+            <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 12px; text-align: center;">
+                <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">BP</div>
+                <div style="font-weight: 700;">{{ medical_record.blood_pressure }}</div>
+            </div>
+            {% endif %}
+            {% if medical_record.temperature %}
+            <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 12px; text-align: center;">
+                <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Temp</div>
+                <div style="font-weight: 700;">{{ medical_record.temperature }}</div>
+            </div>
+            {% endif %}
+            {% if medical_record.weight %}
+            <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 12px; text-align: center;">
+                <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Weight</div>
+                <div style="font-weight: 700;">{{ medical_record.weight }}</div>
+            </div>
+            {% endif %}
+            {% if medical_record.pulse %}
+            <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 12px; text-align: center;">
+                <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Pulse</div>
+                <div style="font-weight: 700;">{{ medical_record.pulse }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if medical_record.symptoms %}
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 4px;">Symptoms</div>
+            <div style="font-size: 0.9rem;">{{ medical_record.symptoms }}</div>
+        </div>
+        {% endif %}
+        {% if medical_record.diagnosis %}
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 4px;">Diagnosis</div>
+            <div style="font-size: 0.9rem;">{{ medical_record.diagnosis }}</div>
+        </div>
+        {% endif %}
+        {% if medical_record.prescription %}
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 4px;">Prescription</div>
+            <div style="font-size: 0.9rem; white-space: pre-line;">{{ medical_record.prescription }}</div>
+        </div>
+        {% endif %}
+        {% if medical_record.lab_tests_ordered %}
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 4px;">Lab Tests Ordered</div>
+            <div style="font-size: 0.9rem;">{{ medical_record.lab_tests_ordered }}</div>
+        </div>
+        {% endif %}
+        {% if medical_record.follow_up_required %}
+        <div style="background: var(--warning-bg); border-radius: var(--border-radius); padding: 12px; margin-top: 12px;">
+            <i class="fas fa-calendar-check" style="color: var(--warning); margin-right: 8px;"></i>
+            <strong>Follow-up required</strong> on {{ medical_record.follow_up_date|date:"M d, Y" }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <a href="{% url 'clinic:my_appointments' %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+            <i class="fas fa-arrow-left"></i> Back to Appointments
+        </a>
+        {% if appointment.status == 'PENDING' or appointment.status == 'CONFIRMED' %}
+        <a href="{% url 'clinic:reschedule_appointment' appointment.id %}" class="btn-primary" style="flex: 1; justify-content: center;">
+            <i class="fas fa-calendar-edit"></i> Reschedule
+        </a>
+        <a href="{% url 'clinic:cancel_appointment' appointment.id %}" class="btn-secondary" style="flex: 1; justify-content: center; color: var(--danger); border-color: var(--danger);">
+            <i class="fas fa-times"></i> Cancel
+        </a>
+        {% endif %}
+        {% if appointment.status == 'COMPLETED' and not review and user.role == 'PATIENT' %}
+        <a href="{% url 'clinic:review_doctor' appointment.id %}" class="btn-primary" style="flex: 1; justify-content: center;">
+            <i class="fas fa-star"></i> Review Doctor
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base/base.html' %}
+{% block page_title %}My Payments{% endblock %}
+{% block page_subtitle %}Complete payment history{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in-up">
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom: 24px;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-receipt"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.total_payments }}</div>
+                <div class="stat-label">Total Payments</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">PKR {{ stats.total_paid }}</div>
+                <div class="stat-label">Paid</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">PKR {{ stats.total_pending }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-undo"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">PKR {{ stats.total_refunded }}</div>
+                <div class="stat-label">Refunded</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="data-card">
+        <div class="data-card-header">
+            <h3>Payment History</h3>
+        </div>
+        {% if payments %}
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--gray-50);">
+                    <th style="padding: 12px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500);">#</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500);">Doctor</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500);">Date</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500);">Method</th>
+                    <th style="padding: 12px 16px; text-align: right; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500);">Amount</th>
+                    <th style="padding: 12px 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500);">Status</th>
+                    <th style="padding: 12px 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500);">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pay in payments %}
+                <tr style="border-bottom: 1px solid var(--gray-100);">
+                    <td style="padding: 12px 16px; font-weight: 700; color: var(--gray-600);">#{{ pay.id }}</td>
+                    <td style="padding: 12px 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-100); color: var(--primary-700); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; overflow: hidden; flex-shrink: 0;">
+                                {% if pay.appointment.doctor.profile_photo %}
+                                    <img src="{{ pay.appointment.doctor.profile_photo.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                {% else %}
+                                    {{ pay.appointment.doctor.username|slice:":1"|upper }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.85rem;">Dr. {{ pay.appointment.doctor.get_full_name|default:pay.appointment.doctor.username }}</div>
+                                <div style="font-size: 0.72rem; color: var(--gray-500);">{{ pay.appointment.doctor.specialization|default:"General" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px 16px; font-size: 0.85rem;">{{ pay.created_at|date:"M d, Y" }}</td>
+                    <td style="padding: 12px 16px; font-size: 0.85rem;">{{ pay.get_method_display }}</td>
+                    <td style="padding: 12px 16px; text-align: right; font-weight: 700; font-size: 0.9rem;">PKR {{ pay.amount }}</td>
+                    <td style="padding: 12px 16px; text-align: center;">
+                        <span class="status-badge status-{{ pay.status|lower }}">{{ pay.get_status_display }}</span>
+                    </td>
+                    <td style="padding: 12px 16px; text-align: center;">
+                        {% if pay.status == 'PAID' %}
+                        <a href="{% url 'clinic:payment_receipt' pay.id %}" class="btn-ghost btn-sm" title="Download Receipt">
+                            <i class="fas fa-download"></i> Receipt
+                        </a>
+                        {% elif pay.status == 'PENDING' %}
+                        <a href="{% url 'clinic:make_payment' pay.appointment.id %}" class="btn-primary btn-sm" title="Complete Payment">
+                            Pay
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="padding: 40px;">
+            <div class="empty-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            <h4>No payments yet</h4>
+            <p>Your payment history will appear here after you book appointments.</p>
+            <a href="{% url 'clinic:book_appointment' %}" class="btn-primary btn-sm" style="margin-top: 12px;">
+                <i class="fas fa-calendar-plus"></i> Book Appointment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

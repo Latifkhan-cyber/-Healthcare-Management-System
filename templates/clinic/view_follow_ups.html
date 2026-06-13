@@ -1,0 +1,58 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Follow-Up Schedule{% endblock %}
+{% block page_subtitle %}Track all scheduled follow-up visits{% endblock %}
+
+{% block content %}
+<div class="data-card animate-fade-in-up">
+    <div class="data-card-header">
+        <h3>Follow-Ups <span style="color: var(--gray-400); font-weight: 400;">({{ follow_ups.count }})</span></h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Diagnosis</th>
+                    <th>Follow-Up Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in follow_ups %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ record.patient.get_full_name|default:record.patient.username }}</div>
+                        <div style="font-size: 0.78rem; color: var(--gray-500);"><i class="fas fa-phone" style="margin-right: 3px;"></i>{{ record.patient.phone|default:"No phone" }}</div>
+                    </td>
+                    <td>{% if record.doctor %}Dr. {{ record.doctor.get_full_name|default:record.doctor.username }}{% else %}<span style="color: var(--gray-400);">--</span>{% endif %}</td>
+                    <td style="max-width: 250px;">
+                        <span title="{{ record.diagnosis }}">{{ record.diagnosis|truncatechars:60 }}</span>
+                    </td>
+                    <td><span style="font-weight: 700; color: var(--primary-700);">{{ record.follow_up_date|date:"M d, Y" }}</span></td>
+                    <td>
+                        {% if record.follow_up_date < today %}
+                            <span class="status-badge status-cancelled"><i class="fas fa-exclamation-circle" style="margin-right: 3px;"></i> Overdue</span>
+                        {% elif record.follow_up_date == today %}
+                            <span class="status-badge status-pending"><i class="fas fa-bell" style="margin-right: 3px;"></i> Today</span>
+                        {% else %}
+                            <span class="status-badge status-confirmed"><i class="fas fa-calendar-check" style="margin-right: 3px;"></i> Scheduled</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="fas fa-clipboard-check"></i></div>
+                            <h4>No upcoming follow-ups</h4>
+                            <p>Follow-up visits will appear here when scheduled</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Patient Consultation{% endblock %}
+{% block page_subtitle %}Token #{{ token.token_number|stringformat: "02d" }} — {{ appointment.patient.get_full_name|default:appointment.patient.username }}{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 520px;">
+    <div class="form-card animate-scale-in" style="text-align: center; padding: 36px;">
+        <div class="form-header" style="margin-bottom: 24px;">
+            <div class="icon" style="background: var(--success-bg); color: var(--success); width: 64px; height: 64px; font-size: 1.5rem;">
+                <i class="fas fa-stethoscope"></i>
+            </div>
+            <h2>Patient Ready</h2>
+            <p>Review patient info, then mark as seen after examination</p>
+        </div>
+
+        <!-- Patient Info -->
+        <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 18px; margin-bottom: 24px; text-align: left; border: 1px solid var(--gray-200);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase;">Patient</div>
+                    <div style="font-weight: 700; font-size: 1.05rem;">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase;">Patient ID</div>
+                    <div style="font-weight: 700; font-size: 1.05rem; color: var(--primary-700);">{{ appointment.patient.patient_id|default:"—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase;">Gender / Age</div>
+                    <div style="font-weight: 600;">{{ appointment.patient.get_gender_display|default:"—" }} {% if appointment.patient.get_age %}· {{ appointment.patient.get_age }} yrs{% endif %}</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase;">Phone</div>
+                    <div style="font-weight: 600;">{{ appointment.patient.phone|default:"—" }}</div>
+                </div>
+            </div>
+            {% if appointment.reason %}
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--gray-200);">
+                <div style="font-size: 0.65rem; color: var(--gray-500); text-transform: uppercase;">Reason</div>
+                <div style="font-weight: 600; margin-top: 2px;">{{ appointment.reason }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Previous History Link -->
+        <a href="{% url 'clinic:patient_detail' appointment.patient.patient_id %}" class="btn-ghost" style="width: 100%; justify-content: center; margin-bottom: 16px;">
+            <i class="fas fa-history"></i> View Patient History
+        </a>
+
+        <!-- Mark as Seen Form -->
+        <div style="background: var(--success-bg); border: 1px solid #a7f3d0; border-radius: var(--border-radius); padding: 16px; margin-bottom: 16px;">
+            <div style="font-size: 0.85rem; color: var(--success-text); margin-bottom: 12px;">
+                <i class="fas fa-info-circle"></i> After examining the patient, click below to mark as seen. Admin will record the consultation details.
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn-primary btn-lg" style="width: 100%; justify-content: center; background: linear-gradient(135deg, var(--success), #059669);">
+                    <i class="fas fa-check-circle"></i> Mark as Seen
+                </button>
+            </form>
+        </div>
+
+        <a href="{% url 'clinic:manage_queue' %}" class="btn-secondary" style="width: 100%; justify-content: center;">
+            <i class="fas fa-arrow-left"></i> Back to Queue
+        </a>
+    </div>
+</div>
+{% endblock %}

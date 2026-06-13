@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Payment Settings{% endblock %}
+{% block page_subtitle %}Configure clinic payment account details{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 640px;">
+    <div class="form-card animate-scale-in">
+        <div class="form-header">
+            <div class="icon" style="background: var(--warning-bg); color: var(--warning);">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <h2>Payment Settings</h2>
+            <p>These account details will be shown to patients during payment</p>
+        </div>
+
+        <div class="info-box">
+            <span>Enter your clinic's payment account numbers below. These will be displayed on the payment page so patients know where to send money.</span>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 28px;">
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-mobile-alt" style="color: #d93025;"></i>
+                    JazzCash
+                </h4>
+                <div class="form-group">
+                    <label>JazzCash Account Number</label>
+                    <input type="text" name="jazzcash_number" value="{{ settings.jazzcash_number|default:'' }}"
+                           class="form-control" placeholder="e.g., 0300-1234567">
+                    <div class="form-help">Patient will see this number to send JazzCash payment</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 28px;">
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-mobile-alt" style="color: var(--success);"></i>
+                    EasyPaisa
+                </h4>
+                <div class="form-group">
+                    <label>EasyPaisa Account Number</label>
+                    <input type="text" name="easypaisa_number" value="{{ settings.easypaisa_number|default:'' }}"
+                           class="form-control" placeholder="e.g., 0311-7654321">
+                    <div class="form-help">Patient will see this number to send EasyPaisa payment</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 28px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
+                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-university" style="color: var(--info);"></i>
+                    Bank Transfer
+                </h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bank Name</label>
+                        <input type="text" name="bank_name" value="{{ settings.bank_name|default:'' }}"
+                               class="form-control" placeholder="e.g., HBL, UBL, Meezan">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Title</label>
+                        <input type="text" name="bank_account_title" value="{{ settings.bank_account_title|default:'' }}"
+                               class="form-control" placeholder="e.g., Healthcare Clinic">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Account Number / IBAN</label>
+                    <input type="text" name="bank_account_number" value="{{ settings.bank_account_number|default:'' }}"
+                           class="form-control" placeholder="e.g., 1234-5678901234 or PK36HABB0001234567890123">
+                    <div class="form-help">Patient will use this for IBFT / bank deposit</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-lg" style="width: 100%; justify-content: center;">
+                <i class="fas fa-save"></i>
+                Save Payment Settings
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Dr. {{ doctor.get_full_name|default:doctor.username }}{% endblock %}
+{% block page_subtitle %}{{ doctor.specialization|default:"General Practice" }}{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in-up">
+    <!-- Doctor Profile Card -->
+    <div class="form-card" style="max-width: 800px; margin: 0 auto 24px;">
+        <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px;">
+            <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--primary-100); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: var(--primary-700); overflow: hidden; flex-shrink: 0;">
+                {% if doctor.profile_photo %}
+                    <img src="{{ doctor.profile_photo.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                {% else %}
+                    {{ doctor.username|slice:":1"|upper }}
+                {% endif %}
+            </div>
+            <div>
+                <h2 style="font-size: 1.5rem; font-weight: 800;">Dr. {{ doctor.get_full_name|default:doctor.username }}</h2>
+                <p style="color: var(--gray-500); font-size: 1rem;">{{ doctor.specialization|default:"General Practice" }}</p>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                    <span style="font-weight: 700; font-size: 1.2rem; color: var(--primary-700);">
+                        {{ avg_rating|default:"—" }}
+                    </span>
+                    <span style="color: #f59e0b;">
+                        {% with rating=avg_rating|default:0|floatformat:0 %}
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= rating %}★{% else %}☆{% endif %}
+                        {% endfor %}
+                        {% endwith %}
+                    </span>
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">({{ reviews|length }} review{{ reviews|length|pluralize }})</span>
+                </div>
+                <div style="margin-top: 8px;">
+                    <span style="background: var(--success-bg); color: var(--success-text); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 700;">
+                        <i class="fas fa-money-bill-wave"></i> PKR {{ doctor.consultation_fee }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule -->
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;">
+            <i class="fas fa-calendar-alt" style="color: var(--primary-600); margin-right: 8px;"></i>Weekly Schedule
+        </h3>
+        {% with schedules=doctor.schedules.all %}
+        {% if schedules %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 24px;">
+            {% for sched in schedules %}
+            <div style="background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--border-radius); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; font-size: 0.85rem;">{{ sched.get_day_of_week_display }}</span>
+                <span style="color: var(--gray-600); font-size: 0.85rem;">
+                    {{ sched.start_time|time:"h:i A" }} — {{ sched.end_time|time:"h:i A" }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: var(--gray-500); font-size: 0.85rem; margin-bottom: 24px;">No schedule set.</p>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Patient Reviews -->
+    <div class="form-card" style="max-width: 800px; margin: 0 auto;">
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px;">
+            <i class="fas fa-star" style="color: #f59e0b; margin-right: 8px;"></i>Patient Reviews
+        </h3>
+        {% if reviews %}
+        {% for review in reviews %}
+        <div style="padding: 16px 0; border-bottom: 1px solid var(--gray-100);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-100); color: var(--primary-700); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">
+                        {{ review.patient.username|slice:":1"|upper }}
+                    </div>
+                    <span style="font-weight: 600; font-size: 0.9rem;">{{ review.patient.get_full_name|default:review.patient.username }}</span>
+                </div>
+                <span style="color: #f59e0b; font-weight: 700;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+            {% if review.comment %}
+            <p style="font-size: 0.85rem; color: var(--gray-700); margin-left: 40px;">{{ review.comment }}</p>
+            {% endif %}
+            <div style="font-size: 0.75rem; color: var(--gray-400); margin-left: 40px; margin-top: 4px;">{{ review.created_at|date:"M d, Y" }}</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state" style="padding: 32px;">
+            <div class="empty-icon"><i class="fas fa-star"></i></div>
+            <p>No reviews yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Dr. {{ doctor.get_full_name|default:doctor.username }}{% endblock %}
+{% block page_subtitle %}Patient reviews and ratings{% endblock %}
+
+{% block content %}
+<!-- Doctor Info & Rating Summary -->
+<div class="card animate-fade-in-up" style="margin-bottom: 28px;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--primary-400), var(--primary-600)); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; flex-shrink: 0;">
+            {{ doctor.username|slice:":1"|upper }}
+        </div>
+        <div style="flex: 1;">
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--gray-900);">Dr. {{ doctor.get_full_name|default:doctor.username }}</h2>
+            <p style="color: var(--gray-500); font-size: 0.9rem;">{{ doctor.specialization|default:"General Practice" }}</p>
+        </div>
+        <div style="text-align: center; padding: 12px 20px; background: var(--warning-bg); border-radius: var(--border-radius);">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--warning);">
+                {% if avg_rating %}{{ avg_rating|floatformat:1 }}{% else %}--{% endif %}
+            </div>
+            <div style="display: flex; gap: 2px; justify-content: center; margin-top: 2px;">
+                {% for i in "12345" %}
+                    {% if avg_rating >= forloop.counter %}
+                        <i class="fas fa-star" style="color: var(--warning); font-size: 0.75rem;"></i>
+                    {% elif avg_rating >= forloop.counter|add:"-0.5" %}
+                        <i class="fas fa-star-half-alt" style="color: var(--warning); font-size: 0.75rem;"></i>
+                    {% else %}
+                        <i class="far fa-star" style="color: var(--gray-300); font-size: 0.75rem;"></i>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div style="font-size: 0.7rem; color: var(--gray-500); margin-top: 4px;">{{ reviews.count }} review{{ reviews.count|pluralize }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews List -->
+<div class="data-card animate-fade-in-up delay-100">
+    <div class="data-card-header">
+        <h3>All Reviews</h3>
+    </div>
+    {% for review in reviews %}
+    <div class="notification-item">
+        <div class="notif-left">
+            <div class="notif-icon unread" style="background: var(--primary-50); color: var(--primary-600);">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="notif-content">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                    <span class="title unread">{{ review.patient.get_full_name|default:review.patient.username }}</span>
+                    <div style="display: flex; gap: 1px;">
+                        {% for i in "12345" %}
+                            {% if review.rating >= forloop.counter %}
+                                <i class="fas fa-star" style="color: var(--warning); font-size: 0.65rem;"></i>
+                            {% else %}
+                                <i class="far fa-star" style="color: var(--gray-300); font-size: 0.65rem;"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if review.comment %}
+                    <div class="message">{{ review.comment }}</div>
+                {% endif %}
+                <div class="time">{{ review.created_at|timesince }} ago</div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon"><i class="fas fa-star"></i></div>
+        <h4>No reviews yet</h4>
+        <p>Reviews will appear here once patients rate their experience</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base/base.html' %}
+{% block public_content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="form-header auth-header">
+            <div class="auth-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2>Welcome Back</h2>
+            <p>Please enter your details to sign in</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="form-error">{{ field.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn-primary btn-lg w-full" style="justify-content: center; margin-top: 8px;">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <a href="{% url 'password_reset' %}"><i class="fas fa-key"></i> Forgot Password?</a>
+            <br><br>
+            Don't have an account? <a href="{% url 'signup' %}">Create Account</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

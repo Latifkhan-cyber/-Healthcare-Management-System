@@ -1,0 +1,151 @@
+{% extends 'base/base.html' %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your personal information{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- Profile Form -->
+    <div class="form-card animate-fade-in-up">
+        <div class="form-header">
+            <div class="icon" style="background: var(--info-bg); color: var(--info);">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h2>Personal Information</h2>
+            <p>Update your profile details</p>
+        </div>
+
+        <!-- Patient ID Badge -->
+        <div style="background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: var(--border-radius); padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px;">Your Patient ID</div>
+                <div style="font-size: 1.3rem; font-weight: 800; color: var(--primary-700); letter-spacing: 1px;">{{ user.patient_id }}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.7rem; color: var(--gray-500);">Registered</div>
+                <div style="font-weight: 600; font-size: 0.85rem;">{{ user.date_joined|date:"M d, Y" }}</div>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Profile Photo -->
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary-200); flex-shrink: 0; background: var(--gray-100); display: flex; align-items: center; justify-content: center;">
+                    {% if user.profile_photo %}
+                        <img src="{{ user.profile_photo.url }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        <span style="font-size: 2rem; color: var(--gray-400);">{{ user.username|slice:":1"|upper }}</span>
+                    {% endif %}
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Profile Photo</label>
+                    <input type="file" name="profile_photo" accept="image/*" class="form-control" style="padding: 6px 10px; font-size: 0.8rem;">
+                    <div class="form-help">JPG, PNG. Max 2MB.</div>
+                    {% if user.profile_photo %}
+                        <a href="{% url 'clinic:remove_profile_photo' %}" style="font-size: 0.75rem; color: var(--danger);"><i class="fas fa-trash"></i> Remove photo</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control" placeholder="First name">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control" placeholder="Last name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" value="{{ user.email }}" class="form-control" placeholder="Email address">
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone" value="{{ user.phone|default:'' }}" class="form-control" placeholder="Phone number">
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" name="address" value="{{ user.address|default:'' }}" class="form-control" placeholder="Address">
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" value="{{ user.username }}" class="form-control" disabled style="background: var(--gray-100); color: var(--gray-500);">
+                <div class="form-help">Username cannot be changed</div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select name="gender" class="form-control">
+                        <option value="">-- Select --</option>
+                        <option value="MALE" {% if user.gender == 'MALE' %}selected{% endif %}>Male</option>
+                        <option value="FEMALE" {% if user.gender == 'FEMALE' %}selected{% endif %}>Female</option>
+                        <option value="OTHER" {% if user.gender == 'OTHER' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" name="date_of_birth" value="{{ user.date_of_birth|date:'Y-m-d'|default:'' }}" class="form-control">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary btn-lg" style="width: 100%; justify-content: center;">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </form>
+    </div>
+
+    <!-- Stats & Recent Activity -->
+    <div class="animate-fade-in-up delay-100">
+        <!-- Stats -->
+        <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-calendar-alt"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_appointments }}</div>
+                    <div class="stat-label">Total Appointments</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ completed_appointments }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+            <div class="stat-card" style="grid-column: span 2;">
+                <div class="stat-icon purple"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">PKR {{ total_spent }}</div>
+                    <div class="stat-label">Total Spent</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent History -->
+        <div class="data-card">
+            <div class="data-card-header">
+                <h3>Recent Medical History</h3>
+                <a href="{% url 'clinic:view_history' %}" class="btn-ghost btn-sm">View All</a>
+            </div>
+            {% for record in recent_history %}
+            <div style="padding: 14px 20px; border-bottom: 1px solid var(--gray-100);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-weight: 600; font-size: 0.88rem;">{{ record.diagnosis|truncatechars:40 }}</span>
+                    <span style="font-size: 0.72rem; color: var(--gray-400);">{{ record.visit_date|date:"M d, Y" }}</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--gray-500);">
+                    Dr. {{ record.doctor.get_full_name|default:record.doctor.username }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state" style="padding: 24px;">
+                <div class="empty-icon"><i class="fas fa-file-medical"></i></div>
+                <p>No medical history yet</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Add Staff{% endblock %}
+{% block page_subtitle %}Create a new doctor or receptionist account{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in-up" style="max-width: 700px; margin: 0 auto;">
+    <div class="form-card">
+        <div class="form-header">
+            <div class="icon" style="background: var(--info-bg); color: var(--info);">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h2>Create Staff Account</h2>
+            <p>Fill in the details below. Default password will be: <strong>staff123</strong></p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Role Selection -->
+            <div class="form-group">
+                <label>Account Type *</label>
+                {{ form.role }}
+                {% if form.role.errors %}
+                    <div class="form-error">{{ form.role.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="form-error">{{ form.first_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="form-error">{{ form.last_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Username *</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="form-error">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="form-error">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <div class="form-error">{{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label>Gender</label>
+                    {{ form.gender }}
+                    {% if form.gender.errors %}
+                        <div class="form-error">{{ form.gender.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Doctor-specific fields -->
+            <div id="doctor-fields" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Specialization</label>
+                        {{ form.specialization }}
+                        {% if form.specialization.errors %}
+                            <div class="form-error">{{ form.specialization.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label>Consultation Fee (PKR)</label>
+                        {{ form.consultation_fee }}
+                        {% if form.consultation_fee.errors %}
+                            <div class="form-error">{{ form.consultation_fee.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password fields -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Password *</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div class="form-error">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                    {% if form.password1.help_text %}
+                        <small style="color: var(--gray-500); font-size: 0.75rem;">{{ form.password1.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password *</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div class="form-error">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <a href="{% url 'manage_staff' %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-primary btn-lg" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Show/hide doctor-specific fields based on role selection
+    function toggleDoctorFields() {
+        var roleSelect = document.querySelector('[name="role"]');
+        var doctorFields = document.getElementById('doctor-fields');
+        if (roleSelect && doctorFields) {
+            doctorFields.style.display = roleSelect.value === 'DOCTOR' ? 'block' : 'none';
+        }
+    }
+    document.querySelector('[name="role"]')?.addEventListener('change', toggleDoctorFields);
+    // Run on page load
+    toggleDoctorFields();
+</script>
+
+<style>
+    select, input { font-family: var(--font-sans); }
+</style>
+{% endblock %}

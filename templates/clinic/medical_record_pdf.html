@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Medical Record — {{ patient.get_full_name }}</title>
+    <style>
+        @page { size: A4; margin: 40px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1e293b; font-size: 13px; line-height: 1.6; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0d9488; padding-bottom: 20px; margin-bottom: 24px; }
+        .logo { font-size: 24px; font-weight: 800; color: #0d9488; }
+        .logo-sub { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 2px; }
+        .doc-title { text-align: right; }
+        .doc-title h2 { font-size: 18px; color: #0d9488; }
+        .doc-title p { color: #64748b; font-size: 11px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .info-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+        .info-block h3 { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 1px; margin-bottom: 6px; }
+        .info-block p { font-size: 13px; margin-bottom: 2px; }
+        .info-block .name { font-weight: 700; font-size: 15px; }
+        .section { margin-bottom: 20px; }
+        .section h3 { font-size: 12px; text-transform: uppercase; color: #0d9488; letter-spacing: 1px; border-bottom: 1px solid #ccfbf1; padding-bottom: 6px; margin-bottom: 8px; }
+        .section p { font-size: 13px; white-space: pre-line; }
+        .vitals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+        .vital { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; }
+        .vital .label { font-size: 9px; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+        .vital .value { font-weight: 700; font-size: 14px; margin-top: 4px; }
+        .footer { border-top: 1px solid #e2e8f0; padding-top: 16px; text-align: center; color: #94a3b8; font-size: 10px; margin-top: 30px; }
+        .followup-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px; margin-top: 16px; }
+        .followup-box strong { color: #92400e; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="logo">Healthcare</div>
+            <div class="logo-sub">Healthcare Management System</div>
+        </div>
+        <div class="doc-title">
+            <h2>MEDICAL RECORD</h2>
+            <p>Visit Date: {{ record.visit_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-block">
+            <h3>Patient</h3>
+            <p class="name">{{ patient.get_full_name|default:patient.username }}</p>
+            <p>ID: {{ patient.patient_id|default:"N/A" }}</p>
+            <p>Age: {{ record.get_age_at_visit|default:"N/A" }} | {{ patient.get_gender_display|default:"" }}</p>
+        </div>
+        <div class="info-block">
+            <h3>Doctor</h3>
+            <p class="name">Dr. {{ doctor.get_full_name|default:doctor.username }}</p>
+            <p>{{ doctor.specialization|default:"General" }}</p>
+        </div>
+    </div>
+
+    {% if record.blood_pressure or record.temperature or record.weight or record.pulse %}
+    <div class="vitals-grid">
+        {% if record.blood_pressure %}
+        <div class="vital"><div class="label">Blood Pressure</div><div class="value">{{ record.blood_pressure }}</div></div>
+        {% endif %}
+        {% if record.temperature %}
+        <div class="vital"><div class="label">Temperature</div><div class="value">{{ record.temperature }}</div></div>
+        {% endif %}
+        {% if record.weight %}
+        <div class="vital"><div class="label">Weight</div><div class="value">{{ record.weight }}</div></div>
+        {% endif %}
+        {% if record.pulse %}
+        <div class="vital"><div class="label">Pulse</div><div class="value">{{ record.pulse }}</div></div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if record.symptoms %}
+    <div class="section">
+        <h3>Symptoms</h3>
+        <p>{{ record.symptoms }}</p>
+    </div>
+    {% endif %}
+
+    {% if record.diagnosis %}
+    <div class="section">
+        <h3>Diagnosis</h3>
+        <p>{{ record.diagnosis }}</p>
+    </div>
+    {% endif %}
+
+    {% if record.prescription %}
+    <div class="section">
+        <h3>Prescription</h3>
+        <p>{{ record.prescription }}</p>
+    </div>
+    {% endif %}
+
+    {% if record.lab_tests_ordered %}
+    <div class="section">
+        <h3>Lab Tests Ordered</h3>
+        <p>{{ record.lab_tests_ordered }}</p>
+    </div>
+    {% endif %}
+
+    {% if record.notes %}
+    <div class="section">
+        <h3>Additional Notes</h3>
+        <p>{{ record.notes }}</p>
+    </div>
+    {% endif %}
+
+    {% if record.follow_up_required %}
+    <div class="followup-box">
+        <strong><i class="fas fa-calendar-check"></i> Follow-up Required:</strong> {{ record.follow_up_date|date:"M d, Y" }}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Healthcare — Medical Record for {{ patient.get_full_name|default:patient.username }}</p>
+        <p>This is a computer-generated document. Generated on {{ record.visit_date|date:"M d, Y" }}</p>
+    </div>
+</body>
+</html>
