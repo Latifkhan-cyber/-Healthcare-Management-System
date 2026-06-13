@@ -1,0 +1,39 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Manage Doctors{% endblock %}
+{% block page_subtitle %}Manage doctor profiles and schedules{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    {% for doctor in doctors %}
+    <div class="card animate-fade-in-up" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 52px; height: 52px; background: linear-gradient(135deg, var(--primary-400), var(--primary-600)); color: white; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; flex-shrink: 0;">
+                {{ doctor.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <div style="font-weight: 700; font-size: 1rem;">Dr. {{ doctor.get_full_name|default:doctor.username }}</div>
+                <div style="font-size: 0.8rem; color: var(--gray-500);">{{ doctor.specialization|default:"General" }}</div>
+                <div style="font-size: 0.75rem; color: var(--gray-400); margin-top: 2px;"><i class="fas fa-envelope" style="margin-right: 3px;"></i>{{ doctor.email|default:"No email" }}</div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{% url 'clinic:doctor_schedule' doctor.id %}" class="btn-secondary" style="flex: 1; justify-content: center; padding: 8px; font-size: 0.8rem;">
+                <i class="fas fa-calendar"></i> Schedule
+            </a>
+            <a href="{% url 'clinic:doctor_reviews' doctor.id %}" class="btn-ghost" style="flex: 1; justify-content: center; padding: 8px; font-size: 0.8rem;">
+                <i class="fas fa-star"></i> Reviews
+            </a>
+            <a href="{% url 'admin:accounts_user_change' doctor.id %}" class="btn-ghost" style="flex: 1; justify-content: center; padding: 8px; font-size: 0.8rem;">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="grid-column: span 3;">
+        <div class="empty-icon"><i class="fas fa-user-doctor"></i></div>
+        <h4>No doctors found</h4>
+        <p>Add doctors through the <a href="{% url 'admin:accounts_user_add' %}">admin panel</a></p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

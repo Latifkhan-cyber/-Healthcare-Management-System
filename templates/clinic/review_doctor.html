@@ -1,0 +1,92 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Review Doctor{% endblock %}
+{% block page_subtitle %}Rate your experience with Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 520px;">
+    <div class="form-card animate-scale-in">
+        <div class="form-header">
+            <div class="icon" style="background: var(--warning-bg); color: var(--warning);">
+                <i class="fas fa-star"></i>
+            </div>
+            <h2>Rate Your Experience</h2>
+            <p>Your feedback helps us improve our service</p>
+        </div>
+
+        <!-- Appointment Info -->
+        <div style="background: var(--gray-50); padding: 16px; border-radius: var(--border-radius); margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--primary-100); color: var(--primary-700); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    {{ appointment.doctor.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <div style="font-weight: 700;">Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">{{ appointment.appointment_date|date:"M d, Y" }} &mdash; {{ appointment.doctor.specialization|default:"General" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Rating <span class="required">*</span></label>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    {% for i in "12345" %}
+                    <label style="cursor: pointer; text-align: center;">
+                        <input type="radio" name="rating" value="{{ i }}" style="display: none;" required>
+                        <div class="star-btn" data-value="{{ i }}" style="width: 48px; height: 48px; border-radius: 12px; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--gray-300); transition: all var(--transition-base);">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div style="font-size: 0.65rem; color: var(--gray-500); margin-top: 4px;">{{ i }}</div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.rating.errors %}<div class="form-error">{{ form.rating.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label>Comment (Optional)</label>
+                {{ form.comment }}
+                {% if form.comment.errors %}<div class="form-error">{{ form.comment.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'clinic:my_appointments' %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+                    Skip
+                </a>
+                <button type="submit" class="btn-primary" style="flex: 2; justify-content: center;">
+                    <i class="fas fa-paper-plane"></i> Submit Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .star-btn:hover, .star-btn.active {
+        border-color: var(--warning) !important;
+        background: var(--warning-bg) !important;
+        color: var(--warning) !important;
+    }
+    input[type="text"], textarea {
+        width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--border-radius); font-size: 0.9rem; font-family: var(--font-sans);
+    }
+    textarea:focus { outline: none; border-color: var(--primary-400); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
+</style>
+
+<script>
+    document.querySelectorAll('.star-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var val = this.getAttribute('data-value');
+            document.querySelectorAll('.star-btn').forEach(function(b) {
+                b.classList.remove('active');
+                if (parseInt(b.getAttribute('data-value')) <= parseInt(val)) {
+                    b.classList.add('active');
+                }
+            });
+            document.querySelector('input[name="rating"][value="' + val + '"]').checked = true;
+        });
+    });
+</script>
+{% endblock %}

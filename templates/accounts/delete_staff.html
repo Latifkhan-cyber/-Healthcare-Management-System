@@ -1,0 +1,31 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Delete Staff{% endblock %}
+{% block page_subtitle %}Confirm account deletion{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in-up" style="max-width: 500px; margin: 0 auto;">
+    <div class="form-card" style="text-align: center;">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: #fef2f2; color: var(--danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 1.8rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">Delete Staff Account?</h2>
+        <p style="color: var(--gray-500); font-size: 0.9rem; margin-bottom: 24px;">
+            You are about to delete <strong>{{ staff.get_full_name|default:staff.username }}</strong>
+            ({{ staff.get_role_display }}). This action cannot be undone.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px;">
+                <a href="{% url 'manage_staff' %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn-primary btn-lg" style="flex: 1; justify-content: center; background: var(--danger); border-color: var(--danger);">
+                    <i class="fas fa-trash"></i> Yes, Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

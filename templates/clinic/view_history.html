@@ -1,0 +1,110 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Medical History{% endblock %}
+{% block page_subtitle %}Diagnoses, prescriptions, and lab reports{% endblock %}
+
+{% block content %}
+<div class="data-card animate-fade-in-up">
+    <div class="data-card-header">
+        <h3>Records <span style="color: var(--gray-400); font-weight: 400;">({{ records.paginator.count }})</span></h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    {% if user.role != 'PATIENT' %}<th>Patient</th>{% endif %}
+                    <th>Doctor</th>
+                    <th>Diagnosis</th>
+                    <th>Prescription</th>
+                    <th>Follow-up</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td><span style="font-weight: 700;">{{ record.visit_date|date:"M d, Y" }}</span></td>
+                    {% if user.role != 'PATIENT' %}
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--info-bg); color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">
+                                {{ record.patient.username|slice:":1"|upper }}
+                            </div>
+                            <span style="font-weight: 600;">{{ record.patient.get_full_name|default:record.patient.username }}</span>
+                        </div>
+                    </td>
+                    {% endif %}
+                    <td>
+                        {% if record.doctor %}
+                            Dr. {{ record.doctor.get_full_name|default:record.doctor.username }}
+                        {% else %}
+                            <span style="color: var(--gray-400);">--</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 220px;">
+                        <span title="{{ record.diagnosis }}">{{ record.diagnosis|truncatechars:60 }}</span>
+                    </td>
+                    <td style="max-width: 220px;">
+                        <span title="{{ record.prescription }}">{{ record.prescription|truncatechars:60 }}</span>
+                    </td>
+                    <td>
+                        {% if record.follow_up_required %}
+                            <span class="status-badge status-pending" style="font-size: 0.7rem;">
+                                <i class="fas fa-calendar" style="margin-right: 3px;"></i>
+                                {{ record.follow_up_date|date:"M d" }}
+                            </span>
+                        {% else %}
+                            <span style="color: var(--gray-400); font-size: 0.8rem;">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'clinic:print_medical_record' record.id %}" class="btn-ghost btn-sm" title="Print Record">
+                            <i class="fas fa-print"></i> Print
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if user.role == 'PATIENT' %}6{% else %}7{% endif %}">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="fas fa-file-medical"></i></div>
+                            <h4>No medical records found</h4>
+                            <p>Records will appear here after consultations</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if records.has_other_pages %}
+    <div class="pagination">
+        {% if records.has_previous %}
+            <a href="?page=1">&laquo; First</a>
+            <a href="?page={{ records.previous_page_number }}">&lsaquo; Prev</a>
+        {% else %}
+            <span class="disabled">&laquo; First</span>
+            <span class="disabled">&lsaquo; Prev</span>
+        {% endif %}
+
+        {% for num in records.paginator.page_range %}
+            {% if records.number == num %}
+                <span class="current">{{ num }}</span>
+            {% elif num > records.number|add:'-3' and num < records.number|add:'3' %}
+                <a href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if records.has_next %}
+            <a href="?page={{ records.next_page_number }}">Next &rsaquo;</a>
+            <a href="?page={{ records.paginator.num_pages }}">Last &raquo;</a>
+        {% else %}
+            <span class="disabled">Next &rsaquo;</span>
+            <span class="disabled">Last &raquo;</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

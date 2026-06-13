@@ -1,0 +1,145 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Lab Tests{% endblock %}
+{% block page_subtitle %}Track ordered lab tests and upload results{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="stat-card animate-fade-in-up delay-100">
+        <div class="stat-icon blue"><i class="fas fa-vial"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">Total Tests</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-200">
+        <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.ordered }}</div>
+            <div class="stat-label">Ordered</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-300">
+        <div class="stat-icon cyan"><i class="fas fa-flask"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.in_lab }}</div>
+            <div class="stat-label">In Lab</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-400">
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.results }}</div>
+            <div class="stat-label">Results Received</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="filters-bar" style="margin-top: 20px;">
+    <form method="get" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+        <span style="font-weight: 600; font-size: 0.85rem; color: var(--gray-600);">Filter:</span>
+        <select name="status" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        {% if status_filter %}
+        <a href="{% url 'clinic:lab_tests' %}" class="btn-ghost btn-sm">Clear Filter</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Lab Tests Table -->
+<div class="data-card animate-fade-in-up delay-100" style="margin-top: 20px;">
+    <div class="data-card-header">
+        <h3>Lab Tests <span style="color: var(--gray-400); font-weight: 400;">({{ lab_tests.count }})</span></h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Name</th>
+                    {% if user.role != 'PATIENT' %}<th>Patient</th>{% endif %}
+                    {% if user.role == 'ADMIN' %}<th>Doctor</th>{% endif %}
+                    <th>Category</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th>Ordered</th>
+                    <th>Result Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in lab_tests %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 700;">{{ test.test_name }}</div>
+                        {% if test.results %}
+                        <div style="font-size: 0.75rem; color: var(--gray-500); margin-top: 2px;">{{ test.results|truncatechars:50 }}</div>
+                        {% endif %}
+                    </td>
+                    {% if user.role != 'PATIENT' %}
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 28px; height: 28px; border-radius: 6px; background: var(--info-bg); color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700;">
+                                {{ test.patient.username|slice:":1"|upper }}
+                            </div>
+                            <span style="font-weight: 600; font-size: 0.85rem;">{{ test.patient.get_full_name|default:test.patient.username }}</span>
+                        </div>
+                    </td>
+                    {% endif %}
+                    {% if user.role == 'ADMIN' %}
+                    <td>{% if test.doctor %}Dr. {{ test.doctor.get_full_name|default:test.doctor.username }}{% else %}—{% endif %}</td>
+                    {% endif %}
+                    <td>{{ test.test_category|default:"—" }}</td>
+                    <td style="font-weight: 600; color: var(--success);">PKR {{ test.cost }}</td>
+                    <td>
+                        {% if test.status == 'ORDERED' %}
+                            <span class="status-badge status-pending" style="font-size: 0.7rem;">{{ test.get_status_display }}</span>
+                        {% elif test.status == 'SAMPLE_COLLECTED' %}
+                            <span class="status-badge status-confirmed" style="font-size: 0.7rem;">{{ test.get_status_display }}</span>
+                        {% elif test.status == 'IN_LAB' %}
+                            <span class="status-badge status-pending" style="font-size: 0.7rem; background: #ecfeff; color: #0891b2;">{{ test.get_status_display }}</span>
+                        {% elif test.status == 'RESULTS_RECEIVED' %}
+                            <span class="status-badge status-paid" style="font-size: 0.7rem;">{{ test.get_status_display }}</span>
+                        {% else %}
+                            <span class="status-badge status-cancelled" style="font-size: 0.7rem;">{{ test.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 0.8rem; color: var(--gray-500);">{{ test.ordered_date|date:"M d, Y" }}</td>
+                    <td style="font-size: 0.8rem; color: var(--gray-500);">
+                        {% if test.result_date %}{{ test.result_date|date:"M d, Y" }}{% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if test.report_file %}
+                            <a href="{{ test.report_file.url }}" target="_blank" class="btn-icon" title="View Report">
+                                <i class="fas fa-file-medical"></i>
+                            </a>
+                        {% else %}
+                            <span style="color: var(--gray-400); font-size: 0.75rem;">—</span>
+                        {% endif %}
+                        {% if user.role == 'ADMIN' or user.role == 'RECEPTIONIST' %}
+                            <a href="{% url 'clinic:update_lab_test' test.id %}" class="btn-icon success" title="Update">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if user.role == 'PATIENT' %}6{% elif user.role == 'DOCTOR' %}7{% else %}8{% endif %}">
+                        <div class="empty-state" style="padding: 30px;">
+                            <div class="empty-icon"><i class="fas fa-vial"></i></div>
+                            <h4>No lab tests found</h4>
+                            <p>Lab tests will appear here when ordered during consultation</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

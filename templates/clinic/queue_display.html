@@ -1,0 +1,124 @@
+{% extends 'base/base.html' %}
+{% block title %}Queue Display — Healthcare{% endblock %}
+{% block extra_css %}
+<style>
+    body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+    .tv-container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+    .tv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #1e293b; padding-bottom: 20px; }
+    .tv-logo { font-size: 2rem; font-weight: 800; color: #2dd4bf; }
+    .tv-logo-sub { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 3px; }
+    .tv-clock { text-align: right; }
+    .tv-clock .time { font-size: 2.5rem; font-weight: 800; color: #2dd4bf; }
+    .tv-clock .date { font-size: 0.9rem; color: #64748b; }
+    .tv-now-serving { background: linear-gradient(135deg, #0d9488, #0f766e); border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px; }
+    .tv-now-serving .label { font-size: 1rem; text-transform: uppercase; letter-spacing: 3px; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+    .tv-now-serving .token-number { font-size: 5rem; font-weight: 900; color: white; line-height: 1; }
+    .tv-now-serving .doctor-name { font-size: 1.2rem; color: rgba(255,255,255,0.8); margin-top: 8px; }
+    .tv-doctors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .tv-doctor-card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+    .tv-doctor-card.active { border-color: #2dd4bf; background: #134e4a; }
+    .tv-doctor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .tv-doctor-name { font-weight: 700; font-size: 1.1rem; }
+    .tv-doctor-spec { font-size: 0.8rem; color: #94a3b8; }
+    .tv-current-token { font-size: 2rem; font-weight: 800; color: #2dd4bf; }
+    .tv-current-label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+    .tv-waiting { font-size: 0.85rem; color: #94a3b8; margin-top: 8px; }
+    .tv-queue-list { margin-top: 12px; }
+    .tv-queue-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #334155; font-size: 0.85rem; }
+    .tv-queue-item:last-child { border-bottom: none; }
+    .tv-queue-item .token { font-weight: 700; color: #e2e8f0; }
+    .tv-queue-item .patient { color: #94a3b8; }
+    .tv-empty { text-align: center; padding: 40px; color: #64748b; }
+    .tv-footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #1e293b; color: #475569; font-size: 0.8rem; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .status-dot.active { background: #2dd4bf; box-shadow: 0 0 8px #2dd4bf; }
+    .status-dot.inactive { background: #475569; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tv-container">
+    <div class="tv-header">
+        <div>
+            <div class="tv-logo"><i class="fas fa-heart-pulse"></i> Healthcare</div>
+            <div class="tv-logo-sub">Healthcare Queue Display</div>
+        </div>
+        <div class="tv-clock">
+            <div class="time" id="clock">00:00:00</div>
+            <div class="date" id="date">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Now Serving (first active token across all doctors) -->
+    {% if now_serving %}
+    <div class="tv-now-serving">
+        <div class="label"><i class="fas fa-bullhorn"></i> Now Serving</div>
+        <div class="token-number">#{{ now_serving.token_number }}</div>
+        <div class="doctor-name">Dr. {{ now_serving.appointment.doctor.get_full_name|default:now_serving.appointment.doctor.username }} — {{ now_serving.appointment.doctor.specialization|default:"General" }}</div>
+    </div>
+    {% else %}
+    <div class="tv-now-serving" style="background: #1e293b;">
+        <div class="label">No patients in queue</div>
+        <div class="token-number" style="font-size: 2rem; color: #64748b;">—</div>
+    </div>
+    {% endif %}
+
+    <!-- Per-Doctor Queue -->
+    <div class="tv-doctors-grid">
+        {% for doc_queue in doctors_queue %}
+        <div class="tv-doctor-card {% if doc_queue.active_token %}active{% endif %}">
+            <div class="tv-doctor-header">
+                <div>
+                    <div class="tv-doctor-name">
+                        <span class="status-dot {% if doc_queue.active_token %}active{% else %}inactive{% endif %}"></span>
+                        Dr. {{ doc_queue.doctor.get_full_name|default:doc_queue.doctor.username }}
+                    </div>
+                    <div class="tv-doctor-spec">{{ doc_queue.doctor.specialization|default:"General" }}</div>
+                </div>
+            </div>
+            {% if doc_queue.active_token %}
+            <div class="tv-current-label">Current Token</div>
+            <div class="tv-current-token">#{{ doc_queue.active_token.token_number }}</div>
+            {% endif %}
+            {% if doc_queue.waiting_count > 0 %}
+            <div class="tv-waiting">{{ doc_queue.waiting_count }} patient{{ doc_queue.waiting_count|pluralize }} waiting</div>
+            {% endif %}
+            {% if doc_queue.queue %}
+            <div class="tv-queue-list">
+                {% for token in doc_queue.queue %}
+                <div class="tv-queue-item">
+                    <span class="token">#{{ token.token_number }}</span>
+                    <span class="patient">{{ token.patient_initials }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if not doc_queue.queue and not doc_queue.active_token %}
+            <div style="color: #475569; font-size: 0.85rem; margin-top: 8px;">No queue</div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="tv-empty" style="grid-column: span all;">
+            <i class="fas fa-users-slash" style="font-size: 3rem; margin-bottom: 12px;"></i>
+            <p>No doctors on duty today</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="tv-footer">
+        <p>Healthcare Healthcare Management System &mdash; Queue auto-refreshes every 30 seconds</p>
+    </div>
+</div>
+
+<script>
+    function updateClock() {
+        var now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {hour12: false});
+        document.getElementById('date').textContent = now.toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+    // Auto-refresh page every 30 seconds
+    setTimeout(function() { location.reload(); }, 30000);
+</script>
+{% endblock %}

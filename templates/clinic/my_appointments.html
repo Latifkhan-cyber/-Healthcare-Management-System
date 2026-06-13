@@ -1,0 +1,113 @@
+{% extends 'base/base.html' %}
+{% block page_title %}My Appointments{% endblock %}
+{% block page_subtitle %}View and manage all your appointments{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card animate-fade-in-up delay-100">
+        <div class="stat-icon blue"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">Total</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-200">
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.completed }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-300">
+        <div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.upcoming }}</div>
+            <div class="stat-label">Upcoming</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-400">
+        <div class="stat-icon cyan"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.pending }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+</div>
+
+<!-- Appointments Table -->
+<div class="data-card animate-fade-in-up delay-200">
+    <div class="data-card-header">
+        <h3>All Appointments</h3>
+        <a href="{% url 'clinic:book_appointment' %}" class="btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Book New
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments %}
+                <tr>
+                    <td>
+                        <a href="{% url 'clinic:appointment_detail' appt.id %}" style="font-weight: 700; color: var(--primary-700); text-decoration: none;">#{{ appt.queue_token.token_number|default:"---" }}</a>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--primary-100); color: var(--primary-700); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">
+                                {{ appt.doctor.username|slice:":1"|upper }}
+                            </div>
+                            <span style="font-weight: 600;">Dr. {{ appt.doctor.get_full_name|default:appt.doctor.username }}</span>
+                        </div>
+                    </td>
+                    <td>{{ appt.appointment_date|date:"M d, Y" }}</td>
+                    <td>{{ appt.time_slot|time:"h:i A" }}</td>
+                    <td><span class="status-badge status-{{ appt.status|lower }}">{{ appt.get_status_display }}</span></td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            {% if appt.status == 'PENDING' %}
+                                <a href="{% url 'clinic:make_payment' appt.id %}" class="btn-primary btn-sm" style="text-decoration: none;">
+                                    <i class="fas fa-credit-card"></i> Pay
+                                </a>
+                            {% endif %}
+                            {% if appt.status == 'PENDING' or appt.status == 'CONFIRMED' %}
+                                <a href="{% url 'clinic:reschedule_appointment' appt.id %}" class="btn-icon warning" title="Reschedule">
+                                    <i class="fas fa-calendar-edit"></i>
+                                </a>
+                                <a href="{% url 'clinic:cancel_appointment' appt.id %}" class="btn-icon danger" title="Cancel">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            {% endif %}
+                            {% if appt.status == 'COMPLETED' and not appt.review %}
+                                <a href="{% url 'clinic:review_doctor' appt.id %}" class="btn-icon success" title="Review Doctor">
+                                    <i class="fas fa-star"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+                            <h4>No appointments found</h4>
+                            <p><a href="{% url 'clinic:book_appointment' %}">Book one now</a> to get started.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

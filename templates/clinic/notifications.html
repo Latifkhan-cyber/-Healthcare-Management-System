@@ -1,0 +1,40 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}You have {{ unread_count }} unread notification{{ unread_count|pluralize }}{% endblock %}
+
+{% block content %}
+<div class="data-card animate-fade-in-up">
+    <div class="data-card-header">
+        <h3>All Notifications</h3>
+    </div>
+    {% for notif in notifications %}
+    <div class="notification-item">
+        <div class="notif-left">
+            <div class="notif-icon {% if notif.is_read %}read{% else %}unread{% endif %}">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="notif-content">
+                <div class="title {% if not notif.is_read %}unread{% endif %}">{{ notif.title }}</div>
+                <div class="message">{{ notif.message }}</div>
+                <div class="time"><i class="far fa-clock" style="margin-right: 3px;"></i>{{ notif.created_at|timesince }} ago</div>
+            </div>
+        </div>
+        {% if notif.is_read %}
+            <span style="font-size: 0.75rem; color: var(--gray-400); display: flex; align-items: center; gap: 4px;">
+                <i class="fas fa-check"></i> Read
+            </span>
+        {% else %}
+            <a href="{% url 'clinic:mark_notification_read' notif.id %}" class="btn-primary btn-sm" style="text-decoration: none;">
+                <i class="fas fa-check"></i> Mark Read
+            </a>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon"><i class="fas fa-bell-slash"></i></div>
+        <h4>No notifications yet</h4>
+        <p>Notifications will appear here when there's activity</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

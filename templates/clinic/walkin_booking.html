@@ -1,0 +1,171 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Walk-in Booking{% endblock %}
+{% block page_subtitle %}Book a cash patient at the reception desk{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 640px;">
+    <div class="form-card animate-scale-in">
+        <div class="form-header">
+            <div class="icon" style="background: var(--success-bg); color: var(--success);">
+                <i class="fas fa-hospital-user"></i>
+            </div>
+            <h2>Walk-in Booking</h2>
+            <p>Register a patient who walked in and pay cash at reception</p>
+        </div>
+
+        <div class="info-box success">
+            <span>This will immediately confirm the appointment, record cash payment, and generate a queue token — just like a real reception desk.</span>
+        </div>
+
+        <form method="post" id="walkin-form">
+            {% csrf_token %}
+
+            <!-- Patient Selection -->
+            <div class="form-group">
+                <label>Patient</label>
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 10px 16px; border: 2px solid var(--primary-500); border-radius: var(--border-radius); background: var(--primary-50); flex: 1; justify-content: center;">
+                        <input type="radio" name="patient_type" value="existing" checked onchange="togglePatientType()">
+                        <i class="fas fa-user-check" style="color: var(--primary-600);"></i>
+                        <span style="font-weight: 600;">Existing Patient</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 10px 16px; border: 2px solid var(--gray-200); border-radius: var(--border-radius); flex: 1; justify-content: center;">
+                        <input type="radio" name="patient_type" value="new" onchange="togglePatientType()">
+                        <i class="fas fa-user-plus" style="color: var(--gray-500);"></i>
+                        <span style="font-weight: 600;">New Patient</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Existing Patient Select -->
+            <div id="existing-patient-section">
+                <div class="form-group">
+                    <label>Select Patient</label>
+                    <select name="patient_id" class="form-control">
+                        <option value="">-- Choose a patient --</option>
+                        {% for p in existing_patients %}
+                        <option value="{{ p.id }}">{{ p.get_full_name|default:p.username }} {% if p.phone %}({{ p.phone }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                    {% if not existing_patients %}
+                    <div class="form-help" style="color: var(--warning);">No existing patients. Select "New Patient" to register one.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- New Patient Fields -->
+            <div id="new-patient-section" style="display: none;">
+                <div style="background: var(--gray-50); border-radius: var(--border-radius); padding: 18px; margin-bottom: 16px; border: 1px solid var(--gray-200);">
+                    <div style="font-weight: 700; color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-user-plus" style="color: var(--primary-600);"></i>
+                        Quick Patient Registration
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name <span class="required">*</span></label>
+                            <input type="text" name="first_name" class="form-control" placeholder="Patient first name">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" class="form-control" placeholder="Patient last name">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select name="gender" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option value="MALE">Male</option>
+                                <option value="FEMALE">Female</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone" class="form-control" placeholder="e.g., 0300-1234567">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Address</label>
+                        <input type="text" name="address" class="form-control" placeholder="Patient address (optional)">
+                    </div>
+                    <div class="form-help" style="margin-top: 10px;">
+                        <i class="fas fa-info-circle"></i>
+                        A patient account will be created automatically with password: <strong>patient123</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointment Details -->
+            <div style="border-top: 1px solid var(--gray-200); padding-top: 20px; margin-top: 8px;">
+                <div style="font-weight: 700; color: var(--gray-700); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-calendar-check" style="color: var(--primary-600);"></i>
+                    Appointment Details
+                </div>
+
+                <div class="form-group">
+                    <label>Doctor <span class="required">*</span></label>
+                    <select name="doctor_id" class="form-control" required>
+                        <option value="">-- Select doctor --</option>
+                        {% for doc in doctors %}
+                        <option value="{{ doc.id }}">
+                            Dr. {{ doc.get_full_name|default:doc.username }} — {{ doc.specialization|default:"General" }} (PKR {{ doc.consultation_fee }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date <span class="required">*</span></label>
+                        <input type="date" name="appointment_date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Time <span class="required">*</span></label>
+                        <input type="time" name="time_slot" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Reason / Notes</label>
+                    <input type="text" name="reason" class="form-control" placeholder="Walk-in consultation">
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div style="background: var(--success-bg); border: 1px solid #a7f3d0; border-radius: var(--border-radius); padding: 14px 16px; margin: 20px 0;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-money-bill-wave" style="color: var(--success); font-size: 1.2rem;"></i>
+                    <div>
+                        <div style="font-weight: 700; color: var(--success-text);">Cash Payment</div>
+                        <div style="font-size: 0.8rem; color: var(--success-text); opacity: 0.8;">Patient pays at reception. Appointment confirmed instantly.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-lg" style="width: 100%; justify-content: center; background: linear-gradient(135deg, var(--success), #059669);">
+                <i class="fas fa-check-circle"></i>
+                Confirm Walk-in Booking
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePatientType() {
+        var type = document.querySelector('input[name="patient_type"]:checked').value;
+        document.getElementById('existing-patient-section').style.display = (type === 'existing') ? 'block' : 'none';
+        document.getElementById('new-patient-section').style.display = (type === 'new') ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

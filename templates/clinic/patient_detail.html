@@ -1,0 +1,325 @@
+{% extends 'base/base.html' %}
+{% block page_title %}{{ p.get_full_name|default:p.username }}{% endblock %}
+{% block page_subtitle %}Patient ID: {{ p.patient_id }}{% endblock %}
+
+{% block content %}
+<!-- Patient Header Card -->
+<div class="card animate-fade-in-up" style="margin-bottom: 24px; border-left: 4px solid var(--primary-500);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--primary-400), var(--primary-600)); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;">
+                {{ p.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                    <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--gray-900); margin: 0;">{{ p.get_full_name|default:p.username }}</h2>
+                    <span style="background: var(--primary-50); color: var(--primary-700); padding: 3px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px;">
+                        {{ p.patient_id }}
+                    </span>
+                </div>
+                <div style="display: flex; gap: 16px; font-size: 0.85rem; color: var(--gray-500);">
+                    {% if p.get_gender_display %}<span><i class="fas fa-venus-mars" style="margin-right: 4px;"></i>{{ p.get_gender_display }}</span>{% endif %}
+                    {% if p.get_age %}<span><i class="fas fa-birthday-cake" style="margin-right: 4px;"></i>{{ p.get_age }} years</span>{% endif %}
+                    {% if p.phone %}<span><i class="fas fa-phone" style="margin-right: 4px;"></i>{{ p.phone }}</span>{% endif %}
+                    {% if p.email %}<span><i class="fas fa-envelope" style="margin-right: 4px;"></i>{{ p.email }}</span>{% endif %}
+                </div>
+                {% if p.address %}
+                <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">
+                    <i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>{{ p.address }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 0.7rem; color: var(--gray-400); text-transform: uppercase;">Registered</div>
+            <div style="font-weight: 600; font-size: 0.85rem;">{{ p.date_joined|date:"M d, Y" }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 24px;">
+    <div class="stat-card animate-fade-in-up delay-100">
+        <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.total_visits }}</div>
+            <div class="stat-label">Total Visits</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-200">
+        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.completed }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-300">
+        <div class="stat-icon purple"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">PKR {{ stats.total_spent }}</div>
+            <div class="stat-label">Total Spent</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-400">
+        <div class="stat-icon orange"><i class="fas fa-vial"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ stats.lab_tests }}</div>
+            <div class="stat-label">Lab Tests</div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px;">
+    <button class="btn-primary btn-sm tab-btn active" onclick="showTab('history')" id="tab-history">
+        <i class="fas fa-file-medical"></i> Medical History
+    </button>
+    <button class="btn-ghost btn-sm tab-btn" onclick="showTab('appointments')" id="tab-appointments">
+        <i class="fas fa-calendar-alt"></i> Appointments
+    </button>
+    <button class="btn-ghost btn-sm tab-btn" onclick="showTab('labs')" id="tab-labs">
+        <i class="fas fa-vial"></i> Lab Tests
+    </button>
+    <button class="btn-ghost btn-sm tab-btn" onclick="showTab('followups')" id="tab-followups">
+        <i class="fas fa-notes-medical"></i> Follow-ups
+    </button>
+</div>
+
+<!-- Medical History Tab -->
+<div id="content-history" class="tab-content">
+    <div class="data-card animate-fade-in-up">
+        <div class="data-card-header">
+            <h3>Medical History <span style="color: var(--gray-400); font-weight: 400;">({{ history.count }})</span></h3>
+        </div>
+        {% for record in history %}
+        <div style="padding: 18px 24px; border-bottom: 1px solid var(--gray-100);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-weight: 700; color: var(--primary-700);">{{ record.visit_date|date:"M d, Y" }}</span>
+                    <span style="color: var(--gray-400);">|</span>
+                    <span style="font-size: 0.85rem; color: var(--gray-600);">Dr. {{ record.doctor.get_full_name|default:record.doctor.username }}</span>
+                </div>
+                {% if record.get_age_at_visit %}
+                <span style="font-size: 0.75rem; color: var(--gray-400);">Age: {{ record.get_age_at_visit }} yrs</span>
+                {% endif %}
+            </div>
+            {% if record.blood_pressure or record.temperature or record.weight or record.pulse %}
+            <div style="display: flex; gap: 16px; margin-bottom: 8px; flex-wrap: wrap;">
+                {% if record.blood_pressure %}<span style="background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600;">BP: {{ record.blood_pressure }}</span>{% endif %}
+                {% if record.temperature %}<span style="background: #fff7ed; color: #9a3412; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600;">Temp: {{ record.temperature }}</span>{% endif %}
+                {% if record.weight %}<span style="background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600;">Weight: {{ record.weight }}</span>{% endif %}
+                {% if record.pulse %}<span style="background: #eff6ff; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600;">Pulse: {{ record.pulse }}</span>{% endif %}
+            </div>
+            {% endif %}
+            {% if record.symptoms %}
+            <div style="margin-bottom: 6px;">
+                <span style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Symptoms:</span>
+                <div style="font-size: 0.85rem; color: var(--gray-700); margin-top: 2px;">{{ record.symptoms }}</div>
+            </div>
+            {% endif %}
+            <div style="margin-bottom: 6px;">
+                <span style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Diagnosis:</span>
+                <div style="font-size: 0.85rem; color: var(--gray-700); margin-top: 2px; font-weight: 600;">{{ record.diagnosis }}</div>
+            </div>
+            <div style="margin-bottom: 6px;">
+                <span style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Prescription:</span>
+                <div style="font-size: 0.85rem; color: var(--gray-700); margin-top: 2px;">{{ record.prescription }}</div>
+            </div>
+            {% if record.lab_tests_ordered %}
+            <div style="margin-top: 8px;">
+                <span style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Lab Tests Ordered:</span>
+                <div style="font-size: 0.8rem; color: var(--info); margin-top: 2px; font-weight: 600;">{{ record.lab_tests_ordered }}</div>
+            </div>
+            {% endif %}
+            {% if record.previous_records %}
+            <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-folder-open" style="color: #92400e;"></i>
+                <a href="{{ record.previous_records.url }}" target="_blank" style="font-size: 0.8rem; color: #92400e; font-weight: 600; text-decoration: none;">
+                    Previous Medical Record
+                </a>
+                {% if record.previous_records_notes %}
+                <span style="font-size: 0.75rem; color: var(--gray-500);">— {{ record.previous_records_notes|truncatechars:60 }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if record.follow_up_required %}
+            <div style="margin-top: 8px;">
+                <span class="status-badge status-pending" style="font-size: 0.65rem;">
+                    <i class="fas fa-calendar" style="margin-right: 3px;"></i>
+                    Follow-up: {{ record.follow_up_date|date:"M d, Y" }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding: 30px;">
+            <div class="empty-icon"><i class="fas fa-file-medical"></i></div>
+            <p>No medical history yet</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Appointments Tab -->
+<div id="content-appointments" class="tab-content" style="display: none;">
+    <div class="data-card">
+        <div class="data-card-header">
+            <h3>All Appointments <span style="color: var(--gray-400); font-weight: 400;">({{ appointments.count }})</span></h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Doctor</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Token</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>{{ appt.appointment_date|date:"M d, Y" }}</td>
+                        <td>Dr. {{ appt.doctor.get_full_name|default:appt.doctor.username }}</td>
+                        <td style="max-width: 150px;">{{ appt.reason|truncatechars:30|default:"—" }}</td>
+                        <td><span class="status-badge status-{{ appt.status|lower }}">{{ appt.get_status_display }}</span></td>
+                        <td>
+                            {% if appt.payment %}
+                                <span style="font-size: 0.75rem;">{{ appt.get_method_display|default:appt.payment.method }} — {{ appt.payment.status }}</span>
+                            {% else %}
+                                <span style="color: var(--gray-400); font-size: 0.75rem;">No payment</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if appt.queue_token %}
+                                <span style="font-weight: 700; color: var(--primary-700);">#{{ appt.queue_token.token_number }}</span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="empty-state" style="padding: 20px;"><p>No appointments</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Lab Tests Tab -->
+<div id="content-labs" class="tab-content" style="display: none;">
+    <div class="data-card">
+        <div class="data-card-header">
+            <h3>Lab Tests <span style="color: var(--gray-400); font-weight: 400;">({{ lab_tests.count }})</span></h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th>Ordered</th>
+                        <th>Result Date</th>
+                        <th>Report</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in lab_tests %}
+                    <tr>
+                        <td style="font-weight: 700;">{{ test.test_name }}</td>
+                        <td>{% if test.doctor %}Dr. {{ test.doctor.get_full_name|default:test.doctor.username }}{% else %}—{% endif %}</td>
+                        <td>
+                            {% if test.status == 'RESULTS_RECEIVED' %}
+                                <span class="status-badge status-paid" style="font-size: 0.7rem;">{{ test.get_status_display }}</span>
+                            {% elif test.status == 'ORDERED' %}
+                                <span class="status-badge status-pending" style="font-size: 0.7rem;">{{ test.get_status_display }}</span>
+                            {% else %}
+                                <span class="status-badge status-confirmed" style="font-size: 0.7rem;">{{ test.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.8rem;">{{ test.ordered_date|date:"M d, Y" }}</td>
+                        <td style="font-size: 0.8rem;">{% if test.result_date %}{{ test.result_date|date:"M d, Y" }}{% else %}Pending{% endif %}</td>
+                        <td>
+                            {% if test.report_file %}
+                                <a href="{{ test.report_file.url }}" target="_blank" class="btn-icon" title="View Report">
+                                    <i class="fas fa-file-medical"></i>
+                                </a>
+                            {% else %}
+                                <span style="color: var(--gray-400); font-size: 0.75rem;">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="empty-state" style="padding: 20px;"><p>No lab tests</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Follow-ups Tab -->
+<div id="content-followups" class="tab-content" style="display: none;">
+    <div class="data-card">
+        <div class="data-card-header">
+            <h3>Follow-Up Schedule <span style="color: var(--gray-400); font-weight: 400;">({{ follow_ups.count }})</span></h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Doctor</th>
+                        <th>Diagnosis</th>
+                        <th>Follow-Up Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in follow_ups %}
+                    <tr>
+                        <td>{% if record.doctor %}Dr. {{ record.doctor.get_full_name|default:record.doctor.username }}{% else %}—{% endif %}</td>
+                        <td style="max-width: 250px;">{{ record.diagnosis|truncatechars:60 }}</td>
+                        <td style="font-weight: 700; color: var(--primary-700);">{{ record.follow_up_date|date:"M d, Y" }}</td>
+                        <td>
+                            {% if record.follow_up_date < today %}
+                                <span class="status-badge status-cancelled" style="font-size: 0.7rem;">Overdue</span>
+                            {% elif record.follow_up_date == today %}
+                                <span class="status-badge status-pending" style="font-size: 0.7rem;">Today</span>
+                            {% else %}
+                                <span class="status-badge status-confirmed" style="font-size: 0.7rem;">Scheduled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4"><div class="empty-state" style="padding: 20px;"><p>No follow-ups scheduled</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tab-btn.active { background: var(--primary-600) !important; color: white !important; border-color: var(--primary-600) !important; }
+</style>
+
+<script>
+    function showTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(function(el) { el.style.display = 'none'; });
+        document.querySelectorAll('.tab-btn').forEach(function(el) {
+            el.classList.remove('active');
+            el.classList.remove('btn-primary');
+            el.classList.add('btn-ghost');
+        });
+        document.getElementById('content-' + tab).style.display = 'block';
+        var activeBtn = document.getElementById('tab-' + tab);
+        activeBtn.classList.add('active');
+        activeBtn.classList.remove('btn-ghost');
+        activeBtn.classList.add('btn-primary');
+    }
+</script>
+{% endblock %}

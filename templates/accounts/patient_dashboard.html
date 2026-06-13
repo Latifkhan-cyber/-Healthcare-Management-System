@@ -1,0 +1,75 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Patient Dashboard{% endblock %}
+{% block page_subtitle %}Manage your health and appointments{% endblock %}
+
+{% block content %}
+<!-- Queue Position Banner -->
+{% if queue_position %}
+<div class="queue-hero">
+    <div class="content">
+        <div class="label">Your Queue Position</div>
+        <div class="position">#{{ queue_position }}</div>
+        <div class="doctor-name">Dr. {{ queue_doctor.get_full_name|default:queue_doctor.username }} &mdash; Est. wait: {{ wait_time }} min</div>
+    </div>
+    <div class="icon">
+        <i class="fas fa-user-clock"></i>
+    </div>
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card animate-fade-in-up delay-100">
+        <div class="stat-icon blue"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ upcoming_count|default:"0" }}</div>
+            <div class="stat-label">Upcoming Visits</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-200">
+        <div class="stat-icon green"><i class="fas fa-file-prescription"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ prescriptions_count|default:"0" }}</div>
+            <div class="stat-label">Prescriptions</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-300">
+        <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{% if queue_position %}#{{ queue_position }}{% else %}--{% endif %}</div>
+            <div class="stat-label">Queue Position</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="dashboard-grid">
+    <a href="{% url 'clinic:book_appointment' %}" class="card animate-fade-in-up delay-100">
+        <div class="icon-wrap" style="background: var(--info-bg); color: var(--info);">
+            <i class="fas fa-plus-circle"></i>
+        </div>
+        <div>
+            <h3>Book Appointment</h3>
+            <p>Schedule a visit with a doctor</p>
+        </div>
+    </a>
+    <a href="{% url 'clinic:my_appointments' %}" class="card animate-fade-in-up delay-200">
+        <div class="icon-wrap" style="background: var(--success-bg); color: var(--success);">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div>
+            <h3>My Appointments</h3>
+            <p>View visits, tokens, and wait times</p>
+        </div>
+    </a>
+    <a href="{% url 'clinic:view_history' %}" class="card animate-fade-in-up delay-300">
+        <div class="icon-wrap" style="background: var(--warning-bg); color: var(--warning);">
+            <i class="fas fa-file-medical-alt"></i>
+        </div>
+        <div>
+            <h3>Medical History</h3>
+            <p>Access diagnoses and prescriptions</p>
+        </div>
+    </a>
+</div>
+{% endblock %}

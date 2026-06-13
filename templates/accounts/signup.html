@@ -1,0 +1,65 @@
+{% extends 'base/base.html' %}
+{% block public_content %}
+<div class="auth-wrapper">
+    <div class="auth-card wide">
+        <div class="form-header auth-header">
+            <div class="auth-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h2>Create Account</h2>
+            <p>Join Healthcare for better healthcare</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                {% for field in form %}
+                <div class="form-group" style="{% if field.name in 'username,email,address' %}grid-column: span 2;{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="form-error">{{ field.errors.0 }}</div>
+                    {% endif %}
+                    {% if field.help_text and field.name != 'password' %}
+                        <small style="color: var(--gray-500); font-size: 0.75rem;">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn-primary btn-lg btn-block" style="width: 100%; justify-content: center; margin-top: 8px;">
+                <i class="fas fa-check-circle"></i>
+                Register Now
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="{% url 'login' %}">Sign In</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"], input[type="password"], input[type="email"], select, textarea {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+        font-family: var(--font-sans);
+        transition: all var(--transition-base);
+    }
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--primary-400);
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+    }
+    input[type="date"] {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+        font-family: var(--font-sans);
+    }
+</style>
+{% endblock %}

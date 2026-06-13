@@ -1,0 +1,219 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Make Payment{% endblock %}
+{% block page_subtitle %}Complete your appointment with digital payment{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 620px;">
+    <div class="form-card animate-scale-in">
+        <div class="form-header">
+            <div class="icon" style="background: var(--warning-bg); color: var(--warning);">
+                <i class="fas fa-credit-card"></i>
+            </div>
+            <h2>Make Payment</h2>
+            <p>Pay digitally to confirm your appointment</p>
+        </div>
+
+        <!-- Appointment Summary -->
+        <div style="background: var(--gray-50); padding: 18px; border-radius: var(--border-radius); margin-bottom: 24px; border-left: 4px solid var(--primary-500);">
+            <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Appointment Details</div>
+            <div style="font-weight: 700; font-size: 1.05rem; color: var(--gray-900);">{{ appointment.appointment_date|date:"M d, Y" }} at {{ appointment.time_slot|time:"h:i A" }}</div>
+            <div style="margin-top: 8px; font-weight: 600; color: var(--gray-700);">Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</div>
+            <div style="margin-top: 4px; font-size: 0.8rem; color: var(--gray-500);">{{ appointment.doctor.specialization }}</div>
+            <div style="margin-top: 10px; font-size: 0.85rem; color: var(--gray-600);">
+                Consultation Fee: <span style="font-weight: 700; color: var(--primary-700);">{{ appointment.doctor.consultation_fee }} PKR</span>
+            </div>
+        </div>
+
+        <!-- Cash info -->
+        <div class="info-box" style="margin-bottom: 20px;">
+            <span><strong>Want to pay cash?</strong> Please visit the clinic reception directly. Our staff will book you as a walk-in patient with instant confirmation.</span>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger" style="margin-bottom: 16px;">
+            {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" id="payment-form" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Payment Method Selection -->
+            <div class="form-group">
+                <label>Select Payment Method</label>
+                <div class="payment-methods">
+                    <div class="payment-card selected" data-method="JAZZCASH" onclick="selectPayment('JAZZCASH')">
+                        <div class="method-icon" style="color: #d93025;"><i class="fas fa-mobile-alt"></i></div>
+                        <div>
+                            <div class="method-name">JazzCash</div>
+                            <div class="method-desc">Mobile wallet</div>
+                        </div>
+                    </div>
+                    <div class="payment-card" data-method="EASYPAISA" onclick="selectPayment('EASYPAISA')">
+                        <div class="method-icon" style="color: var(--success);"><i class="fas fa-mobile-alt"></i></div>
+                        <div>
+                            <div class="method-name">EasyPaisa</div>
+                            <div class="method-desc">Mobile wallet</div>
+                        </div>
+                    </div>
+                    <div class="payment-card" data-method="BANK" onclick="selectPayment('BANK')">
+                        <div class="method-icon" style="color: var(--info);"><i class="fas fa-university"></i></div>
+                        <div>
+                            <div class="method-name">Bank Transfer</div>
+                            <div class="method-desc">IBFT / Deposit</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" name="method" id="id_method" value="JAZZCASH">
+
+            <!-- Amount -->
+            <div class="form-group">
+                <label>Amount (PKR)</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}<div class="form-error">{{ form.amount.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- JazzCash Details -->
+            <div id="jazzcash-details" style="background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--border-radius); padding: 16px; margin-bottom: 16px;">
+                <div style="font-weight: 700; color: #d93025; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-mobile-alt"></i> JazzCash Payment Details
+                </div>
+                {% if payment_settings.jazzcash_number %}
+                    <div style="font-size: 1.4rem; font-weight: 800; color: #d93025; margin: 8px 0; letter-spacing: 2px;">{{ payment_settings.jazzcash_number }}</div>
+                {% else %}
+                    <div style="color: var(--gray-500);">JazzCash number not configured. Please contact the clinic.</div>
+                {% endif %}
+                <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 6px;">Send <strong>{{ appointment.doctor.consultation_fee }} PKR</strong> to the number above, then enter the transaction ID and upload screenshot below.</div>
+            </div>
+
+            <!-- EasyPaisa Details -->
+            <div id="easypaisa-details" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--border-radius); padding: 16px; margin-bottom: 16px;">
+                <div style="font-weight: 700; color: var(--success); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-mobile-alt"></i> EasyPaisa Payment Details
+                </div>
+                {% if payment_settings.easypaisa_number %}
+                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--success); margin: 8px 0; letter-spacing: 2px;">{{ payment_settings.easypaisa_number }}</div>
+                {% else %}
+                    <div style="color: var(--gray-500);">EasyPaisa number not configured. Please contact the clinic.</div>
+                {% endif %}
+                <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 6px;">Send <strong>{{ appointment.doctor.consultation_fee }} PKR</strong> to the number above, then enter the transaction ID and upload screenshot below.</div>
+            </div>
+
+            <!-- Bank Details -->
+            <div id="bank-details" style="display: none; background: var(--info-bg); border: 1px solid #bfdbfe; border-radius: var(--border-radius); padding: 16px; margin-bottom: 16px;">
+                <div style="font-weight: 700; color: var(--info); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-university"></i> Bank Transfer Details
+                </div>
+                {% if payment_settings.bank_name %}
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                        <div>
+                            <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Bank Name</div>
+                            <div style="font-weight: 700;">{{ payment_settings.bank_name }}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Account Title</div>
+                            <div style="font-weight: 700;">{{ payment_settings.bank_account_title }}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Account Number / IBAN</div>
+                        <div style="font-weight: 800; font-size: 1.1rem; letter-spacing: 1px;">{{ payment_settings.bank_account_number }}</div>
+                    </div>
+                {% else %}
+                    <div style="color: var(--gray-500);">Bank details not configured. Please contact the clinic.</div>
+                {% endif %}
+                <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 6px;">Transfer <strong>{{ appointment.doctor.consultation_fee }} PKR</strong> via IBFT or deposit, then enter the reference and upload receipt below.</div>
+            </div>
+
+            <!-- Transaction ID -->
+            <div class="form-group">
+                <label>Transaction ID / Reference <span class="required">*</span></label>
+                {{ form.transaction_id }}
+                {% if form.transaction_id.errors %}<div class="form-error">{{ form.transaction_id.errors.0 }}</div>{% endif %}
+                <div class="form-help">Enter the transaction reference from your payment app or bank receipt</div>
+            </div>
+
+            <!-- Payment Proof -->
+            <div class="form-group">
+                <label>Payment Screenshot / Receipt <span class="required">*</span></label>
+                <div class="file-upload-zone" id="proof-dropzone" onclick="document.getElementById('id_payment_proof').click()">
+                    <div id="proof-placeholder">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Click to upload</div>
+                        <div class="upload-hint">JPG, PNG (max 5MB)</div>
+                    </div>
+                    <div id="proof-preview" style="display: none;">
+                        <div class="upload-icon"><i class="fas fa-check-circle"></i></div>
+                        <div id="proof-filename" class="upload-text" style="color: var(--success);"></div>
+                        <div class="upload-hint">Click to change</div>
+                    </div>
+                </div>
+                {{ form.payment_proof }}
+                {% if form.payment_proof.errors %}<div class="form-error">{{ form.payment_proof.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Info Note -->
+            <div class="info-box" id="payment-note-box">
+                <span>After submission, your appointment will be confirmed once admin verifies the payment. You will receive a notification.</span>
+            </div>
+
+            <button type="submit" class="btn-primary btn-lg" style="width: 100%; justify-content: center;">
+                <i class="fas fa-paper-plane"></i>
+                Submit Payment
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    input[type="text"], input[type="number"], select {
+        width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--border-radius); font-size: 0.9rem; font-family: var(--font-sans);
+    }
+    input:focus { outline: none; border-color: var(--primary-400); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
+    #id_payment_proof { display: none; }
+</style>
+
+<script>
+    function selectPayment(method) {
+        document.getElementById('id_method').value = method;
+        var cards = document.querySelectorAll('.payment-card');
+        for (var i = 0; i < cards.length; i++) {
+            cards[i].classList.remove('selected');
+        }
+        var sel = document.querySelector('.payment-card[data-method="' + method + '"]');
+        if (sel) sel.classList.add('selected');
+
+        // Show/hide specific account details
+        document.getElementById('jazzcash-details').style.display = (method === 'JAZZCASH') ? 'block' : 'none';
+        document.getElementById('easypaisa-details').style.display = (method === 'EASYPAISA') ? 'block' : 'none';
+        document.getElementById('bank-details').style.display = (method === 'BANK') ? 'block' : 'none';
+    }
+
+    var fileInput = document.getElementById('id_payment_proof');
+    var dropzone = document.getElementById('proof-dropzone');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                document.getElementById('proof-placeholder').style.display = 'none';
+                document.getElementById('proof-preview').style.display = 'block';
+                document.getElementById('proof-filename').textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+                dropzone.classList.add('has-file');
+            }
+        });
+    }
+    if (dropzone) {
+        dropzone.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--primary-400)'; });
+        dropzone.addEventListener('dragleave', function(e) { e.preventDefault(); this.style.borderColor = 'var(--gray-300)'; });
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault(); this.style.borderColor = 'var(--gray-300)';
+            if (fileInput && e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+</script>
+{% endblock %}

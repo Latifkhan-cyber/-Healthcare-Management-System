@@ -1,0 +1,170 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Payment Management{% endblock %}
+{% block page_subtitle %}Verify and track all payments{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card animate-fade-in-up delay-100">
+        <div class="stat-icon green"><i class="fas fa-coins"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">PKR {{ total_revenue }}</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-200">
+        <div class="stat-icon blue"><i class="fas fa-check-double"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ paid_count }}</div>
+            <div class="stat-label">Paid</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-300">
+        <div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ pending_count }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-400">
+        <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ failed_count }}</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-500">
+        <div class="stat-icon purple"><i class="fas fa-undo"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ refunded_count|default:0 }}</div>
+            <div class="stat-label">Refunded</div>
+        </div>
+    </div>
+</div>
+
+<!-- Payments Table -->
+<div class="data-card animate-fade-in-up delay-200">
+    <div class="data-card-header">
+        <h3>All Payments</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Proof</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--info-bg); color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">
+                                {{ payment.appointment.patient.username|slice:":1"|upper }}
+                            </div>
+                            <span style="font-weight: 600;">{{ payment.appointment.patient.get_full_name|default:payment.appointment.patient.username }}</span>
+                        </div>
+                    </td>
+                    <td>Dr. {{ payment.appointment.doctor.get_full_name|default:payment.appointment.doctor.username }}</td>
+                    <td style="font-weight: 700;">PKR {{ payment.amount }}</td>
+                    <td>
+                        {% if payment.method == 'CASH' %}<i class="fas fa-money-bill-wave" style="color: var(--success); margin-right: 4px;"></i> Cash (Walk-in)
+                        {% elif payment.method == 'JAZZCASH' %}<i class="fas fa-mobile-alt" style="color: #d93025; margin-right: 4px;"></i> JazzCash
+                        {% elif payment.method == 'EASYPAISA' %}<i class="fas fa-mobile-alt" style="color: var(--success); margin-right: 4px;"></i> EasyPaisa
+                        {% else %}<i class="fas fa-university" style="color: var(--info); margin-right: 4px;"></i> Bank{% endif %}
+                    </td>
+                    <td><span class="status-badge status-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+                    <td>
+                        {% if payment.payment_proof %}
+                            <a href="{{ payment.payment_proof.url }}" target="_blank" class="btn-icon" title="View Proof">
+                                <i class="fas fa-image"></i>
+                            </a>
+                        {% else %}
+                            <span style="color: var(--gray-400); font-size: 0.8rem;">No proof</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if payment.status == 'PENDING' %}
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                {% if payment.method == 'CASH' %}
+                                    <a href="{% url 'clinic:confirm_cash_payment' payment.id %}" class="btn-icon success" title="Confirm Cash Received">
+                                        <i class="fas fa-hand-holding-dollar"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'clinic:verify_payment' payment.id %}" class="btn-icon success" title="Verify Payment">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'clinic:reject_payment' payment.id %}" class="btn-icon danger" title="Reject">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        {% elif payment.status == 'PAID' %}
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <a href="{% url 'clinic:payment_receipt' payment.id %}" class="btn-ghost btn-sm" title="Download Receipt">
+                                    <i class="fas fa-download"></i> Receipt
+                                </a>
+                                <a href="{% url 'clinic:process_refund' payment.id %}" class="btn-ghost btn-sm" style="color: var(--danger);" title="Process Refund">
+                                    <i class="fas fa-undo"></i> Refund
+                                </a>
+                            </div>
+                        {% elif payment.status == 'REFUNDED' %}
+                            <a href="{% url 'clinic:payment_receipt' payment.id %}" class="btn-ghost btn-sm" title="Download Receipt">
+                                <i class="fas fa-download"></i> Receipt
+                            </a>
+                        {% else %}
+                            <span style="color: var(--gray-400); font-size: 0.75rem;">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <h4>No payment records</h4>
+                            <p>Payments will appear here once patients start booking</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}">&lsaquo; Prev</a>
+        {% else %}
+            <span class="disabled">&laquo; First</span>
+            <span class="disabled">&lsaquo; Prev</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Next &rsaquo;</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+        {% else %}
+            <span class="disabled">Next &rsaquo;</span>
+            <span class="disabled">Last &raquo;</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

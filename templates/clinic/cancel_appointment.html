@@ -1,0 +1,34 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Cancel Appointment{% endblock %}
+{% block page_subtitle %}Are you sure you want to cancel?{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 480px;">
+    <div class="form-card animate-scale-in" style="text-align: center;">
+        <div class="form-header">
+            <div class="icon" style="background: var(--danger-bg); color: var(--danger);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2>Cancel Appointment?</h2>
+        </div>
+
+        <p style="color: var(--gray-600); margin-bottom: 24px; line-height: 1.7;">
+            Are you sure you want to cancel your appointment with<br>
+            <strong>Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</strong><br>
+            on <strong>{{ appointment.appointment_date|date:"M d, Y" }}</strong> at <strong>{{ appointment.time_slot|time:"h:i A" }}</strong>?
+        </p>
+
+        <div class="form-actions">
+            <a href="{% url 'clinic:my_appointments' %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+                <i class="fas fa-arrow-left"></i> Go Back
+            </a>
+            <form method="post" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-times"></i> Yes, Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

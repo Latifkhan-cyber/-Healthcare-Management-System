@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Dr. {{ doctor.get_full_name|default:doctor.username }}{% endblock %}
+{% block page_subtitle %}Weekly schedule management{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- Current Schedule -->
+    <div class="data-card animate-fade-in-up">
+        <div class="data-card-header">
+            <h3>Current Schedule</h3>
+            <a href="{% url 'clinic:manage_doctors' %}" class="btn-ghost btn-sm">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sched in schedules %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ sched.get_day_of_week_display }}</td>
+                        <td>{{ sched.start_time|time:"h:i A" }}</td>
+                        <td>{{ sched.end_time|time:"h:i A" }}</td>
+                        <td>
+                            {% if sched.is_available %}
+                                <span class="status-badge status-paid"><i class="fas fa-check-circle" style="margin-right: 3px;"></i> Available</span>
+                            {% else %}
+                                <span class="status-badge status-cancelled"><i class="fas fa-times-circle" style="margin-right: 3px;"></i> Off</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state" style="padding: 24px;">
+                                <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+                                <p>No schedule set</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Schedule -->
+    <div class="data-card animate-fade-in-up delay-100">
+        <div class="data-card-header">
+            <h3>Add / Update Schedule</h3>
+        </div>
+        <form method="post" style="padding: 0 24px 24px;">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label>{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<div class="form-error">{{ field.errors.0 }}</div>{% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+                <i class="fas fa-save"></i> Save Schedule
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    select, input {
+        width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--border-radius); font-size: 0.9rem; font-family: var(--font-sans);
+    }
+    select:focus, input:focus { outline: none; border-color: var(--primary-400); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
+</style>
+{% endblock %}

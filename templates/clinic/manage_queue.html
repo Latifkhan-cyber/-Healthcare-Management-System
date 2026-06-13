@@ -1,0 +1,103 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Queue Management{% endblock %}
+{% block page_subtitle %}Real-time patient queue with estimated waiting times{% endblock %}
+
+{% block content %}
+<!-- Now Serving Banner -->
+{% if active_token %}
+<div class="queue-hero">
+    <div class="content">
+        <div class="label">Now Serving</div>
+        <div class="position">{{ active_token.token_number|stringformat:"02d" }}</div>
+        <div class="doctor-name">{{ active_token.appointment.patient.get_full_name|default:active_token.appointment.patient.username }}</div>
+        <div class="wait-time">Dr. {{ active_token.appointment.doctor.get_full_name|default:active_token.appointment.doctor.username }}</div>
+    </div>
+    <div class="icon">
+        <i class="fas fa-user-check"></i>
+    </div>
+    {% if user.role == 'DOCTOR' %}
+    <a href="{% url 'clinic:serve_patient' active_token.id %}" class="btn-primary" style="position: relative; z-index: 2; background: white; color: var(--primary-700);">
+        <i class="fas fa-stethoscope"></i> Start Consultation
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Queue Table -->
+<div class="data-card animate-fade-in-up delay-100">
+    <div class="data-card-header">
+        <h3>Full Queue <span style="color: var(--gray-400); font-weight: 400;">({{ tokens.count }} waiting)</span></h3>
+        {% if user.role == 'DOCTOR' %}
+        <a href="{% url 'clinic:call_next' %}" class="btn-primary btn-sm">
+            <i class="fas fa-forward"></i> Call Next
+        </a>
+        {% endif %}
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Token</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Est. Wait</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for token in tokens %}
+                <tr>
+                    <td>
+                        <span style="width: 28px; height: 28px; border-radius: 8px; background: var(--gray-100); color: var(--gray-600); display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">
+                            {{ forloop.counter }}
+                        </span>
+                    </td>
+                    <td><span style="font-weight: 700; color: var(--primary-700);">#{{ token.token_number|stringformat:"02d" }}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--info-bg); color: var(--info); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">
+                                {{ token.appointment.patient.username|slice:":1"|upper }}
+                            </div>
+                            <span style="font-weight: 600;">{{ token.appointment.patient.get_full_name|default:token.appointment.patient.username }}</span>
+                        </div>
+                    </td>
+                    <td>Dr. {{ token.appointment.doctor.get_full_name|default:token.appointment.doctor.username }}</td>
+                    <td>
+                        {% if forloop.first %}
+                            <span style="color: var(--warning); font-weight: 700;"><i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i> Now</span>
+                        {% else %}
+                            <span style="color: var(--gray-500);">~{{ token.estimated_wait_minutes }} min</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if token.is_active and user.role == 'DOCTOR' %}
+                            <a href="{% url 'clinic:serve_patient' token.id %}" class="btn-primary btn-sm" style="text-decoration: none;">
+                                <i class="fas fa-hand-holding-medical"></i> Serve
+                            </a>
+                        {% endif %}
+                        {% if token.is_active and not forloop.first %}
+                            {% if user.role == 'ADMIN' or user.role == 'RECEPTIONIST' or user.role == 'DOCTOR' %}
+                            <a href="{% url 'clinic:emergency_priority' token.id %}" class="btn-ghost btn-sm" style="color: var(--danger); margin-left: 4px;" title="Move to front (Emergency)">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="fas fa-users-slash"></i></div>
+                            <h4>No patients in queue</h4>
+                            <p>The queue is currently empty</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

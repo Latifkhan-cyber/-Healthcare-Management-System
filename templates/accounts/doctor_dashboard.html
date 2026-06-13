@@ -1,0 +1,96 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Doctor Dashboard{% endblock %}
+{% block page_subtitle %}Manage your patients and queue for today{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card animate-fade-in-up delay-100">
+        <div class="stat-icon blue"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ pending_count|default:"0" }}</div>
+            <div class="stat-label">Waiting Patients</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-200">
+        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">{{ completed_count|default:"0" }}</div>
+            <div class="stat-label">Seen Today</div>
+        </div>
+    </div>
+    <div class="stat-card animate-fade-in-up delay-300">
+        <div class="stat-icon orange"><i class="fas fa-hourglass-start"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">~15m</div>
+            <div class="stat-label">Avg Consult Time</div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Upcoming Appointments -->
+    <div class="data-card animate-fade-in-up delay-200">
+        <div class="data-card-header">
+            <h3>Upcoming Appointments</h3>
+            <a href="{% url 'clinic:manage_queue' %}" class="btn-primary btn-sm">
+                <i class="fas fa-play"></i> Start Serving
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in upcoming_appointments %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--primary-100); color: var(--primary-700); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">
+                                    {{ appt.patient.username|slice:":1"|upper }}
+                                </div>
+                                <span style="font-weight: 600;">{{ appt.patient.get_full_name|default:appt.patient.username }}</span>
+                            </div>
+                        </td>
+                        <td>{{ appt.time_slot }}</td>
+                        <td><span class="status-badge status-{{ appt.status|lower }}">{{ appt.get_status_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="empty-state" style="padding: 30px;">
+                                <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+                                <p>No upcoming appointments</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Now Serving -->
+    <div class="now-serving animate-fade-in-up delay-300">
+        <h3>Now Serving</h3>
+        {% if active_token %}
+            <div class="token-number">{{ active_token.token_number|stringformat:"02d" }}</div>
+            <div class="patient-name">{{ active_token.appointment.patient.get_full_name|default:active_token.appointment.patient.username }}</div>
+            <a href="{% url 'clinic:serve_patient' active_token.id %}" class="btn-primary" style="width: 100%; background: white; color: var(--primary-700); justify-content: center; margin-top: 20px;">
+                <i class="fas fa-stethoscope"></i> Start Consultation
+            </a>
+        {% else %}
+            <div style="padding: 20px 0; opacity: 0.7;">
+                <i class="fas fa-mug-hot" style="font-size: 2.5rem; margin-bottom: 12px; display: block;"></i>
+                <div style="font-size: 1.1rem; font-weight: 600;">No active patient</div>
+                <p style="opacity: 0.6; font-size: 0.85rem; margin-top: 6px;">The queue is currently empty</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

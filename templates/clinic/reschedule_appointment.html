@@ -1,0 +1,80 @@
+{% extends 'base/base.html' %}
+{% block page_title %}Reschedule Appointment{% endblock %}
+{% block page_subtitle %}Change your appointment date or time{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in-up" style="max-width: 600px; margin: 0 auto;">
+    <div class="form-card">
+        <div class="form-header">
+            <div class="icon" style="background: var(--warning-bg); color: var(--warning);">
+                <i class="fas fa-calendar-edit"></i>
+            </div>
+            <h2>Reschedule Appointment</h2>
+            <p>Select a new date and time for your appointment</p>
+        </div>
+
+        <!-- Current Appointment Info -->
+        <div style="background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--border-radius); padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--gray-500); letter-spacing: 0.5px; margin-bottom: 8px;">Current Appointment</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">{{ appointment.doctor.specialization|default:"" }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600; color: var(--primary-700);">{{ appointment.appointment_date|date:"M d, Y" }}</div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500);">{{ appointment.time_slot|time:"h:i A" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>New Date *</label>
+                <input type="date" name="appointment_date" class="form-control"
+                       min="{{ today|date:'Y-m-d' }}" required>
+                <div class="form-help">Select a date from today onwards</div>
+            </div>
+
+            <div class="form-group">
+                <label>New Time *</label>
+                <input type="time" name="time_slot" class="form-control" required>
+                <div class="form-help">Select your preferred time</div>
+            </div>
+
+            <div class="form-group">
+                <label>Reason (optional)</label>
+                <textarea name="reason" class="form-control" rows="2"
+                          placeholder="Update reason if needed">{{ appointment.reason }}</textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <a href="{% url 'clinic:my_appointments' %}" class="btn-secondary" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-primary btn-lg" style="flex: 1; justify-content: center;">
+                    <i class="fas fa-calendar-check"></i> Reschedule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    input[type="date"], input[type="time"] {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+        font-family: var(--font-sans);
+    }
+    input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--primary-400);
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+    }
+</style>
+{% endblock %}
